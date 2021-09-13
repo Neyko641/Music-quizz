@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "Du4deTBHT+8lu9InbGkALZM3gF/KIClaUJ0Te+Ljt+hAu0fuEgNF7HGBtzuVG7TQ9EXIJZRovO1shzDOEdUyRQ==",
+  "success": true,
+  "projectFilePath": "E:\\Programming\\Projects\\QuizzApp\\MusicQuizz-backend\\MusicQuizz-backend\\MusicQuizz-backend.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\neyko\\.nuget\\packages\\microsoft.extensions.apidescription.server\\3.0.0\\microsoft.extensions.apidescription.server.3.0.0.nupkg.sha512",
+    "C:\\Users\\neyko\\.nuget\\packages\\microsoft.openapi\\1.2.3\\microsoft.openapi.1.2.3.nupkg.sha512",
+    "C:\\Users\\neyko\\.nuget\\packages\\swashbuckle.aspnetcore\\5.6.3\\swashbuckle.aspnetcore.5.6.3.nupkg.sha512",
+    "C:\\Users\\neyko\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\5.6.3\\swashbuckle.aspnetcore.swagger.5.6.3.nupkg.sha512",
+    "C:\\Users\\neyko\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\5.6.3\\swashbuckle.aspnetcore.swaggergen.5.6.3.nupkg.sha512",
+    "C:\\Users\\neyko\\.nuget\\packages\\swashbuckle.aspnetcore.swaggerui\\5.6.3\\swashbuckle.aspnetcore.swaggerui.5.6.3.nupkg.sha512"
+  ],
+  "logs": []
+}
