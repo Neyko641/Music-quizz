@@ -1,8 +1,11 @@
-import React from 'react';
+import React from "react";
+import '../Style/bootstrap.min.css';
 
-const playButton = ({onClick}) => {
+const PlayButton = ({ onPageChange }) => {
     return (
-    <button>Hey!</button>
+    <div>
+        <button className="btn btn-secondary" onClick={onPageChange}>Hey!</button>
+    </div>
     );
 }
-export default playButton;
+export default PlayButton;
