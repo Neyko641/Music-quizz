@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
 
 namespace MusicQuizz_backend.Controllers
 {
@@ -23,6 +24,7 @@ namespace MusicQuizz_backend.Controllers
             _logger = logger;
         }
 
+        [EnableCors("MusicQuizPolicy")]
         [HttpGet]
         public IEnumerable<WeatherForecast> Get()
         {

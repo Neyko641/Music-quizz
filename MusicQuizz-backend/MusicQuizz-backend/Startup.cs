@@ -26,7 +26,13 @@ namespace MusicQuizz_backend
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.AddCors(options =>
+            {
+                options.AddPolicy("MusicQuizPolicy", builder =>
+                {
+                    builder.WithOrigins(Configuration["AllowedOrigins"]);
+                });
+            });
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -47,7 +53,7 @@ namespace MusicQuizz_backend
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
+            app.UseCors();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
