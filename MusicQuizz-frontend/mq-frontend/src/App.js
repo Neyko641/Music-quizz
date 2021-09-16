@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import PlayButton from "./Components/PlayButton";
-import OptionButton from "./Components/OptionButton";
+import Play from "./Components/Play/Play";
+import Options from "./Components/Options/Options";
 import './App.css';
 import './Style/bootstrap.min.css';
+import SignIn from "./Components/SignIn/SignIn";
+import Register from "./Components/Register/Register";
 
 function App() {
   test();
@@ -10,8 +12,12 @@ function App() {
   return (
     <div className="App">
       <p>{currentPage}</p>
-    <PlayButton onPageChange={() => newPage('Play')}/>
-    <OptionButton onPageChange={() => newPage('Options')}/>
+      <div className="container">
+        <Play onPageChange={() => newPage('Play')}/>
+        <Options onPageChange={() => newPage('Options')}/>
+        <SignIn onPageChange={() => newPage('SignIn')}/>
+        <Register onPageChange={() => newPage('Register')}/>
+      </div>
     </div>
   );
 }
