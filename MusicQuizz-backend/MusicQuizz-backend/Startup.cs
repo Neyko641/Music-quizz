@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MusicQuizz_backend.Services;
 
 namespace MusicQuizz_backend
 {
@@ -38,6 +39,7 @@ namespace MusicQuizz_backend
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MusicQuizz_backend", Version = "v1" });
             });
+            services.AddSingleton<AnimeService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
