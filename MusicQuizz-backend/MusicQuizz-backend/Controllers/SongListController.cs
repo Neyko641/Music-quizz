@@ -25,6 +25,6 @@ namespace MusicQuizz_backend.Controllers
 
         [EnableCors("MusicQuizPolicy")]
         [HttpGet]
-        public IEnumerable<DetailedAnimeModel> Get(int count) => _animeService.GetRandomAnimes(count);
+        public IEnumerable<DetailedAnimeModel> Get(int count = 10, string difficulty = "easy") => _animeService.GetRandomAnimes(count, difficulty);
     }
 }

@@ -7,5 +7,7 @@ namespace MusicQuizz_backend.Models
         public SongModel song { get; set; }
 
         public string source { get; set; }
+
+        public string difficulty { get; set; }
     }
 }
