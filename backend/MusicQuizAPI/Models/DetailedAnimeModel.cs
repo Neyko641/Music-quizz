@@ -1,4 +1,4 @@
-namespace MusicQuizz_backend.Models
+namespace MusicQuizAPI.Models
 {
     public class DetailedAnimeModel : AnimeModel
     {

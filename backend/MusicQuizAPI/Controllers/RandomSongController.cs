@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
-using MusicQuizz_backend.Models;
-using MusicQuizz_backend.Services;
+using MusicQuizAPI.Models;
+using MusicQuizAPI.Services;
 
-namespace MusicQuizz_backend.Controllers
+namespace MusicQuizAPI.Controllers
 {
     [ApiController]
     [Route("/song/random")]

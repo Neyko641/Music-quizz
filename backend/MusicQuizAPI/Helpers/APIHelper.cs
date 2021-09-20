@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using System.Net;
 using System.Collections.Generic;
-using MusicQuizz_backend.Models;
+using MusicQuizAPI.Models;
 using System.Text;
 using System.Linq;
 using System.Net.Http;
@@ -10,7 +10,7 @@ using System.Threading;
 using System;
 
 
-namespace MusicQuizz_backend.Helpers
+namespace MusicQuizAPI.Helpers
 {
     public static class APIHelper
     {

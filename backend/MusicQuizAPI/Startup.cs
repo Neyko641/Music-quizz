@@ -11,9 +11,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MusicQuizz_backend.Services;
+using MusicQuizAPI.Services;
 
-namespace MusicQuizz_backend
+namespace MusicQuizAPI
 {
     public class Startup
     {
@@ -37,7 +37,7 @@ namespace MusicQuizz_backend
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "MusicQuizz_backend", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "MusicQuizAPI", Version = "v1" });
             });
             services.AddSingleton<AnimeService>();
         }
@@ -49,7 +49,7 @@ namespace MusicQuizz_backend
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MusicQuizz_backend v1"));
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MusicQuizAPI v1"));
             }
 
             app.UseHttpsRedirection();

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace MusicQuizz_backend.Models
+namespace MusicQuizAPI.Models
 {
     public class ResultModel<T>
     {

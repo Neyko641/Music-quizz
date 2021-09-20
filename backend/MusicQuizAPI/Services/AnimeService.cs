@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
-using MusicQuizz_backend.Models;
-using MusicQuizz_backend.Helpers;
+using MusicQuizAPI.Models;
+using MusicQuizAPI.Helpers;
 
 
-namespace MusicQuizz_backend.Services
+namespace MusicQuizAPI.Services
 {
     public class AnimeService
     {
