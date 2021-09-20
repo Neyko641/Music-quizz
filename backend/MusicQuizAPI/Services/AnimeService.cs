@@ -11,6 +11,7 @@ namespace MusicQuizz_backend.Services
     {
         private readonly List<AnimeModel> _animes = new List<AnimeModel>();
         private readonly List<AnimeModel> _topAnimes = new List<AnimeModel>();
+        private readonly Random _rnd = new Random();
 
         public AnimeService()
         {
@@ -20,34 +21,31 @@ namespace MusicQuizz_backend.Services
 
         public List<DetailedAnimeModel> GetRandomAnimes(int count, string difficulty)
         {
-            List<AnimeModel> result = new List<AnimeModel>();
-            Random rnd = new Random();
+            List<AnimeModel> animeList = new List<AnimeModel>();
+            AnimeModel anime;
             int index;
-            AnimeModel item;
 
-            // Add random anime from Animes Property to result while count is higher than 0
-            // while avoiding duplications
             while (count > 0)
             {
-                index = rnd.Next(_animes.Count);
-                item = _animes[index];
+                index = _rnd.Next(_animes.Count);
+                anime = _animes[index];
 
-                if (!result.Contains(item))
+                if (!animeList.Contains(anime))
                 {
-                    if (string.IsNullOrEmpty(item.difficulty))
+                    if (string.IsNullOrEmpty(anime.difficulty))
                     {
-                        item.difficulty = GetAnimeDifficulty(item.source);
+                        anime.difficulty = GetAnimeDifficulty(anime.source);
                     }
 
-                    if (item.difficulty == difficulty)
+                    if (anime.difficulty == difficulty)
                     {
-                        result.Add(item);
+                        animeList.Add(anime);
                         count--;
                     }
                 }
             }
 
-            return APIHelper.GetAnimesDetails(result);
+            return APIHelper.GetAnimesDetails(animeList);
         }
 
         public string GetAnimeDifficulty(string title)

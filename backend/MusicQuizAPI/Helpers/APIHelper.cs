@@ -108,7 +108,6 @@ namespace MusicQuizz_backend.Helpers
                 }
                 catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException ex)
                 {
-                    // TODO: Make better exception handling method
                     System.Console.WriteLine(string.Format("Error in top anime on page {0}!\n{1}", i, ex.Message));
                 }
                 finally { BobTheBuilder.Clear(); }
