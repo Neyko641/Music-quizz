@@ -7,6 +7,7 @@ namespace MusicQuizAPI.Models
         public int StatusCode { get; private set; } = 200;
         public T Data { get; private set; }
         private readonly List<string> _exceptionMessages;
+        private string _message;
 
         public ResultModel(T data) : this()
         {
@@ -34,21 +35,31 @@ namespace MusicQuizAPI.Models
             StatusCode = 400;
         }
 
+        public void AddServiceUnavailableMessage(string message)
+        {
+            _message = message;
+            StatusCode = 503;
+        }
+
         public object Result()
         { 
-            if (StatusCode == 200)
+            switch (StatusCode)
             {
-                return new {
-                    status = 200,
-                    result = Data
-                };
-            }
-            else
-            {
-                return new {
-                    status = 400,
-                    errors = _exceptionMessages
-                };
+                case 200:
+                    return new {
+                        status = 200,
+                        result = Data
+                    };
+                case 503:
+                    return new {
+                        status = 503,
+                        result = _message
+                    };
+                default:
+                    return new {
+                        status = 400,
+                        errors = _exceptionMessages
+                    };
             }
         }
 

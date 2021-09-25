@@ -1,13 +1,12 @@
-using Newtonsoft.Json;
-using System.Net;
 using System.Collections.Generic;
-using MusicQuizAPI.Models;
+using System.Threading.Tasks;
+using System.Net.Http;
+using System.Threading;
 using System.Text;
 using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Threading;
 using System;
+using Newtonsoft.Json;
+using MusicQuizAPI.Models;
 
 
 namespace MusicQuizAPI.Helpers
@@ -28,9 +27,9 @@ namespace MusicQuizAPI.Helpers
             return await result.Content.ReadAsStringAsync();
         }
 
-        public static List<AnimeModel> GetAnimes()
+        public async static Task<List<AnimeModel>> GetAnimes()
         {
-            string json = GetJson(_APIListURL).Result;
+            string json = await GetJson(_APIListURL);
             return JsonConvert.DeserializeObject<List<AnimeModel>>(json);
         }
 
@@ -56,7 +55,7 @@ namespace MusicQuizAPI.Helpers
             return animeResult;
         }
 
-        public static List<DetailedAnimeModel> GetAnimesDetails(List<AnimeModel> animes)
+        public static async Task<List<DetailedAnimeModel>> GetAnimesDetails(List<AnimeModel> animes)
         {
             var BobTheBuilder = new StringBuilder();
             
@@ -82,7 +81,7 @@ namespace MusicQuizAPI.Helpers
                 return animeResult;
             }).ToList();
 
-            return result;
+            return await Task<List<DetailedAnimeModel>>.Factory.StartNew(() => result);
         }        
 
         public static List<AnimeModel> GetTopAnimes()
@@ -108,7 +107,7 @@ namespace MusicQuizAPI.Helpers
                 }
                 catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException ex)
                 {
-                    System.Console.WriteLine(string.Format("Error in top anime on page {0}!\n{1}", i, ex.Message));
+                    Console.WriteLine(string.Format("Error in top anime on page {0}!\n{1}", i, ex.Message));
                 }
                 finally { BobTheBuilder.Clear(); }
 

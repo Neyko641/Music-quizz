@@ -3,23 +3,29 @@ using System.Threading.Tasks;
 using System;
 using MusicQuizAPI.Models;
 using MusicQuizAPI.Helpers;
-
+using Microsoft.Extensions.Logging;
 
 namespace MusicQuizAPI.Services
 {
     public class AnimeService
     {
-        private readonly List<AnimeModel> _animes = new List<AnimeModel>();
-        private readonly List<AnimeModel> _topAnimes = new List<AnimeModel>();
+        private List<AnimeModel> _animes = new List<AnimeModel>();
+        private List<AnimeModel> _topAnimes = new List<AnimeModel>();
+        private readonly ILogger<AnimeService> _logger;
         private readonly Random _rnd = new Random();
 
-        public AnimeService()
+        public AnimeService(ILogger<AnimeService> logger)
         {
-            _animes = APIHelper.GetAnimes();
-            _topAnimes = APIHelper.GetTopAnimes();
+            _logger = logger;
         }
 
-        public List<DetailedAnimeModel> GetRandomAnimes(int count, string difficulty)
+        public void Update(List<AnimeModel> newAnimes, List<AnimeModel> topAnimes)
+        {
+            _animes = newAnimes;
+            _topAnimes = topAnimes;
+        }
+
+        public async Task<List<DetailedAnimeModel>> GetRandomAnimes(int count, string difficulty)
         {
             List<AnimeModel> animeList = new List<AnimeModel>();
             AnimeModel anime;
@@ -45,7 +51,7 @@ namespace MusicQuizAPI.Services
                 }
             }
 
-            return APIHelper.GetAnimesDetails(animeList);
+            return await APIHelper.GetAnimesDetails(animeList);
         }
 
         public string GetAnimeDifficulty(string title)

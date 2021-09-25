@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
 using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
+using MusicQuizAPI.Helpers;
 
 namespace MusicQuizAPI.Controllers
 {
@@ -25,11 +26,14 @@ namespace MusicQuizAPI.Controllers
 
         [EnableCors("MusicQuizPolicy")]
         [HttpGet]
-        public IActionResult Get(string count, string difficulty = "easy") 
+        public async Task<IActionResult> Get(string count, string difficulty = "easy") 
         {
+            var address = ClientHelper.GetClientIPAdress(HttpContext);
+            _logger.LogTrace($"[GET] request from {address}!");
+
             var result = new ResultModel<List<DetailedAnimeModel>>();
             int countInt;
-
+            
             // count parameter check
             if (!Int32.TryParse(count, out countInt) || countInt < 1 || countInt > 100)
             {
@@ -44,10 +48,12 @@ namespace MusicQuizAPI.Controllers
 
             if (result.StatusCode == 200)
             {
-                result.AddData(_animeService.GetRandomAnimes(countInt, difficulty));
+                result.AddData(await _animeService.GetRandomAnimes(countInt, difficulty));
+                _logger.LogTrace($"[GET] (OK) response to {address}!");
                 return Ok(result.Result());
             }
             
+            _logger.LogTrace($"[GET] (BAD) response to {address}!");
             return BadRequest(result.Result());
         }
     }
