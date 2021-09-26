@@ -1,8 +1,9 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using MusicQuizAPI.Models;
 
-namespace MusicQuizAPI.Models.Middleware
+namespace MusicQuizAPI.Middleware
 {
     public class ControllersCheckerMiddleware
     {
@@ -17,7 +18,7 @@ namespace MusicQuizAPI.Models.Middleware
         {
             if (!Settings.AreControllersAvailable)
             {
-                var result = new ResultModel<object>();
+                var result = new ResultContext();
                 result.AddServiceUnavailableMessage("MusicQuiz API cannot be used right now. Please try again in a minute.");
 
                 var json = JsonConvert.SerializeObject(result.Result());

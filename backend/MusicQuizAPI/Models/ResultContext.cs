@@ -2,22 +2,23 @@ using System.Collections.Generic;
 
 namespace MusicQuizAPI.Models
 {
-    public class ResultModel<T>
+    public class ResultContext<T>
     {
         public int StatusCode { get; private set; } = 200;
         public T Data { get; private set; }
         private readonly List<string> _exceptionMessages;
-        private string _message;
 
-        public ResultModel(T data) : this()
+        public ResultContext(T data) : this()
         {
             Data = data;
         }
 
-        public ResultModel()
+        public ResultContext()
         {
             _exceptionMessages = new List<string>();
         }
+
+        public bool IsOk() => StatusCode == 200;
 
         public bool AddData(T data)
         {
@@ -35,10 +36,15 @@ namespace MusicQuizAPI.Models
             StatusCode = 400;
         }
 
-        public void AddServiceUnavailableMessage(string message)
+        public bool AddServiceUnavailableMessage(string message)
         {
-            _message = message;
-            StatusCode = 503;
+            if (StatusCode == 503 || StatusCode == 200)
+            {
+                _exceptionMessages.Add(message);
+                StatusCode = 503;
+                return true;
+            }
+            return false;
         }
 
         public object Result()
@@ -47,13 +53,13 @@ namespace MusicQuizAPI.Models
             {
                 case 200:
                     return new {
-                        status = 200,
+                        status = StatusCode,
                         result = Data
                     };
                 case 503:
                     return new {
-                        status = 503,
-                        result = _message
+                        status = StatusCode,
+                        result = _exceptionMessages[0]
                     };
                 default:
                     return new {
@@ -64,4 +70,6 @@ namespace MusicQuizAPI.Models
         }
 
     }
+
+    public class ResultContext : ResultContext<object> {}
 }

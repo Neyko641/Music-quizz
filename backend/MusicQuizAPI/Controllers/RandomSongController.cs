@@ -8,9 +8,11 @@ using Microsoft.AspNetCore.Cors;
 using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
 using MusicQuizAPI.Helpers;
+using MusicQuizAPI.Models.Parameters;
 
 namespace MusicQuizAPI.Controllers
 {
+    [EnableCors("MusicQuizPolicy")]
     [ApiController]
     [Route("/song/random")]
     public class RandomSongController : ControllerBase
@@ -24,37 +26,17 @@ namespace MusicQuizAPI.Controllers
             _animeService = animeService;
         }
 
-        [EnableCors("MusicQuizPolicy")]
         [HttpGet]
-        public async Task<IActionResult> Get(string count, string difficulty = "easy") 
+        public async Task<IActionResult> Get([FromQuery]RandomSongParamModel parameters) 
         {
+            var result = new ResultContext<List<DetailedAnimeModel>>();
             var address = ClientHelper.GetClientIPAdress(HttpContext);
             _logger.LogTrace($"[GET] request from {address}!");
 
-            var result = new ResultModel<List<DetailedAnimeModel>>();
-            int countInt;
+            result.AddData(await _animeService.GetRandomAnimes(parameters.Count, parameters.Difficulty));
+            _logger.LogTrace($"[GET] (OK) response to {address}!");
             
-            // count parameter check
-            if (!Int32.TryParse(count, out countInt) || countInt < 1 || countInt > 100)
-            {
-                result.AddExceptionMessage($"[count] is given '{count}', but it must be in the range from 1 to 100.");
-            }
-
-            // difficulty parameter check
-            if (!(difficulty == "easy" || difficulty == "medium" || difficulty == "hard"))
-            {
-                result.AddExceptionMessage($"[difficulty] is given '{difficulty}', but it must be easy, medium or hard");
-            }
-
-            if (result.StatusCode == 200)
-            {
-                result.AddData(await _animeService.GetRandomAnimes(countInt, difficulty));
-                _logger.LogTrace($"[GET] (OK) response to {address}!");
-                return Ok(result.Result());
-            }
-            
-            _logger.LogTrace($"[GET] (BAD) response to {address}!");
-            return BadRequest(result.Result());
+            return Ok(result.Result());
         }
     }
 }
