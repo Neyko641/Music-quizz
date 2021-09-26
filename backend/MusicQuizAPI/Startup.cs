@@ -13,6 +13,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MusicQuizAPI.Services;
 using MusicQuizAPI.Middleware;
+using MusicQuizAPI.Filters;
 
 namespace MusicQuizAPI
 {
@@ -35,7 +36,10 @@ namespace MusicQuizAPI
                     builder.WithOrigins(Configuration["AllowedOrigins"]);
                 });
             });
-            services.AddControllers();
+            services.AddControllers(config =>
+            {
+                config.Filters.Add(new LogFilter());
+            });
             
             services.AddSingleton<AnimeService>();
             services.AddHostedService<AnimeHostedService>();
