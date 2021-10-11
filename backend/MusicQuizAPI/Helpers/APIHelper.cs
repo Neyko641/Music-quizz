@@ -84,9 +84,9 @@ namespace MusicQuizAPI.Helpers
             return await Task<List<DetailedAnimeModel>>.Factory.StartNew(() => result);
         }        
 
-        public static List<AnimeModel> GetTopAnimes()
+        public static List<string> GetTopTitles()
         {
-            var topAnimes = new List<AnimeModel>();
+            var topTitles = new List<string>();
             var BobTheBuilder = new StringBuilder();
 
             for (int i = 1; i <= 6; i++)
@@ -102,8 +102,13 @@ namespace MusicQuizAPI.Helpers
                 {
                     foreach(var anime in animeResult.results)
                     {
-                        topAnimes.Add(new AnimeModel { source = @anime.title });
+                        topTitles.Add((string)@anime.title);
                     }
+                }
+                catch (System.NullReferenceException)
+                {
+                    Console.WriteLine(string.Format("Result from the api call is null.\n{0}", 
+                    BobTheBuilder.ToString()));
                 }
                 catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException ex)
                 {
@@ -114,7 +119,7 @@ namespace MusicQuizAPI.Helpers
                 Thread.Sleep(TimeSpan.FromSeconds(1));
             }
 
-            return topAnimes;
+            return topTitles;
         }
     }
 }

@@ -28,7 +28,7 @@ namespace MusicQuizAPI.Helpers
             Write("animes.json", animes);
         }
 
-        public static void WriteToTopAnimes(List<AnimeModel> topAnimes)
+        public static void WriteToTopAnimes(List<string> topAnimes)
         {
             Write("top_animes.json", topAnimes);
         }

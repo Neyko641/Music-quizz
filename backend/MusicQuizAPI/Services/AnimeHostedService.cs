@@ -9,15 +9,13 @@ namespace MusicQuizAPI.Services
 {
     public class AnimeHostedService : IHostedService
     {
-        private readonly IHostEnvironment _env;
         private readonly AnimeService _animeService;
         private readonly ILogger<AnimeHostedService> _logger;
         private Timer _timer;
 
         public AnimeHostedService(IHostEnvironment env, AnimeService animeService, ILogger<AnimeHostedService> logger)
         {
-            _env = env;
-            FileHelper.SetRootPath(_env.ContentRootPath);
+            FileHelper.SetRootPath(env.ContentRootPath);
 
             _animeService = animeService;
             _logger = logger;
@@ -27,17 +25,12 @@ namespace MusicQuizAPI.Services
         {
             // Every hour it updates the data of all available animes and the top animes
             _timer = new Timer(
-                (o) => {
+                (options) => {
                     _logger.LogInformation("Updating 'animes.json'!");
                     Settings.AreControllersAvailable = false;
 
-                    var animes = APIHelper.GetAnimes().Result;
-                    var topAnimes = APIHelper.GetTopAnimes();
-
-                    FileHelper.WriteToAnimes(animes);
-                    FileHelper.WriteToTopAnimes(topAnimes);
-
-                    _animeService.Update(animes, topAnimes);
+                    // While updating, all controllers are unavailable
+                    _animeService.Update();
 
                     _logger.LogInformation("'animes.json' updated successfully!");
                     Settings.AreControllersAvailable = true;

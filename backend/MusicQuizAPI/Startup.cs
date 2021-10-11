@@ -14,6 +14,10 @@ using System.Threading.Tasks;
 using MusicQuizAPI.Services;
 using MusicQuizAPI.Middleware;
 using MusicQuizAPI.Filters;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace MusicQuizAPI
 {
@@ -29,11 +33,23 @@ namespace MusicQuizAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Using Json Web Token with Bearer Patern for Authentication
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options => 
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = Configuration["JWT:Issuer"],
+                    ValidAudience = Configuration["JWT:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
+                };
+            });
+
             services.AddCors(options =>
             {
                 options.AddPolicy("MusicQuizPolicy", builder =>
                 {
-                    builder.WithOrigins(Configuration["AllowedOrigins"]);
+                    builder.WithOrigins(Configuration["AllowedOrigin"]);
                 });
             });
             services.AddControllers(config =>
@@ -41,6 +57,7 @@ namespace MusicQuizAPI
                 config.Filters.Add(new LogFilter());
             });
             
+            services.AddSingleton<IConfiguration>(Configuration);
             services.AddSingleton<AnimeService>();
             services.AddHostedService<AnimeHostedService>();
         }
@@ -52,8 +69,9 @@ namespace MusicQuizAPI
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            
             app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseRouting();
             app.UseCors();
             app.UseAuthorization();

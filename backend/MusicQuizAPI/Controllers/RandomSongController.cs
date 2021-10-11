@@ -9,9 +9,11 @@ using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
 using MusicQuizAPI.Helpers;
 using MusicQuizAPI.Models.Parameters;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MusicQuizAPI.Controllers
 {
+    //[Authorize]
     [EnableCors("MusicQuizPolicy")]
     [ApiController]
     [Route("/song/random")]

@@ -10,7 +10,7 @@ namespace MusicQuizAPI.Services
     public class AnimeService
     {
         private List<AnimeModel> _animes = new List<AnimeModel>();
-        private List<AnimeModel> _topAnimes = new List<AnimeModel>();
+        private List<string> _topTitles = new List<string>();
         private readonly ILogger<AnimeService> _logger;
         private readonly Random _rnd = new Random();
 
@@ -19,10 +19,13 @@ namespace MusicQuizAPI.Services
             _logger = logger;
         }
 
-        public void Update(List<AnimeModel> newAnimes, List<AnimeModel> topAnimes)
+        public void Update()
         {
-            _animes = newAnimes;
-            _topAnimes = topAnimes;
+            _animes = APIHelper.GetAnimes().Result;
+            _topTitles = APIHelper.GetTopTitles();
+
+            FileHelper.WriteToAnimes(_animes);
+            FileHelper.WriteToTopAnimes(_topTitles);
         }
 
         public async Task<List<DetailedAnimeModel>> GetRandomAnimes(int count, string difficulty)
@@ -41,6 +44,7 @@ namespace MusicQuizAPI.Services
                     if (string.IsNullOrEmpty(anime.difficulty))
                     {
                         anime.difficulty = GetAnimeDifficulty(anime.source);
+                        _animes.Insert(index, anime);
                     }
 
                     if (anime.difficulty == difficulty)
@@ -54,11 +58,17 @@ namespace MusicQuizAPI.Services
             return await APIHelper.GetAnimesDetails(animeList);
         }
 
-        public string GetAnimeDifficulty(string title)
+        private string GetAnimeDifficulty(string title)
         {
-            for (int i = 0; i < _topAnimes.Count; i++)
+            /*
+            TOP 1-150   => Easy
+            TOP 150-300 => Medium
+            TOP >300    => Hard
+            */
+
+            for (int i = 0; i < _topTitles.Count; i++)
             {
-                if (_topAnimes[i].source == title)
+                if (_topTitles[i] == title)
                 {
                     return i < 150 ? "easy" : "medium";
                 }
