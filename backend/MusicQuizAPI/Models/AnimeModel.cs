@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace MusicQuizAPI.Models
 {
+    [NotMapped]
     public class AnimeModel
     {
         public string uid { get; set; }

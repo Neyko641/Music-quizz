@@ -390,3 +390,5 @@ FodyWeavers.xsd
 
 # Custom
 backend/MusicQuizAPI/data/
+backend/MusicQuizAPI/Migrations/
+

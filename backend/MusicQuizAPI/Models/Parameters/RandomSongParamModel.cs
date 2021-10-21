@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using MusicQuizAPI.Validation;
 
 namespace MusicQuizAPI.Models.Parameters
 {
+    [NotMapped]
     public class RandomSongParamModel
     {
         [Range(1, 100)]

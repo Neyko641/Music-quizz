@@ -1,89 +1,70 @@
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Cryptography;
 using MusicQuizAPI.Models;
+using MusicQuizAPI.Services;
+using Microsoft.Extensions.Logging;
+using MusicQuizAPI.Helpers;
 
 namespace MusicQuizAPI.Controllers
 {
     [EnableCors("MusicQuizPolicy")]
-    [Route("/auth")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        public IConfiguration Configuration { get; set; }
+        private readonly IConfiguration _configuration;
+        private readonly UserService _userService;
+        private readonly ILogger<AuthenticationController> _logger;
 
-        public AuthenticationController(IConfiguration configuration)
+        public AuthenticationController(ILogger<AuthenticationController> logger, 
+            IConfiguration configuration, UserService userService)
         {
-            Configuration = configuration;
+            _logger = logger;
+            _configuration = configuration;
+            _userService = userService;
         }
 
-        public IActionResult Post()
+        /*
+        POST Requests are required to have 'Authorization' header with value
+        of "[username]:[password]" in base64 string.
+        */
+            
+
+        [HttpPost("register")]
+        public IActionResult Register()
         {
-            /*
-            POST Request is required to have 'Authorization' header with value
-            of "Basic [username].[password]" in base64 string.
-            */
-
-            ResultContext result = new ResultContext();
-            var authorizationHeader = Request.Headers["Authorization"].FirstOrDefault();
-            string key = "";
-
-            if (string.IsNullOrEmpty(authorizationHeader))
+            string authorizationHeader = Request.Headers["Authorization"].FirstOrDefault();
+            string secret = _configuration["JWT:Secret"];
+            
+            ResultContext result = SecurityHelper.RegisterUser(_userService, authorizationHeader, secret);
+            
+            if (result.StatusCode == 200)
             {
-                result.AddExceptionMessage("Authorization header is required!");
-            }
-            else
-            {
-                try 
-                {
-                    key = authorizationHeader.Split(' ')[1];
-                    var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(key)).Split(':');
-
-                    //credentials[0] is the username
-                    //credentials[1] is the password
-                    if (true) // TODO: Add correct validation
-                    {
-                        var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]));
-                        
-                        result.AddData(new 
-                        {
-                            token = GenerateToken(secret)
-                        });
-
-                        return Ok(result.Result());
-                    }
-                    result.AddExceptionMessage("Wrong 'username' or 'password'!");
-                }
-                catch (Exception)
-                {
-                    result.AddExceptionMessage("Bad payload!");
-                }
+                return Ok(result.Result());
             }
 
             return BadRequest(result.Result());
         }
 
-        private string GenerateToken(SecurityKey key)
+        [HttpPost("login")]
+        public IActionResult Login()
         {
-            var now = DateTime.UtcNow;
-            var issuer = Configuration["JWT:Issuer"];
-            var audience = Configuration["JWT:Audience"];
-            var identity = new ClaimsIdentity();
-            var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var handler = new JwtSecurityTokenHandler();
-            var token = handler.CreateJwtSecurityToken(issuer, audience, identity, now, 
-                now.Add(TimeSpan.FromHours(1)), now, signingCredentials);
-            var encodedJwt = handler.WriteToken(token);
-            return encodedJwt;
+            string authorizationHeader = Request.Headers["Authorization"].FirstOrDefault();
+            string secret = _configuration["JWT:Secret"];
+            
+            ResultContext result = SecurityHelper.LoginUser(_userService, authorizationHeader, secret);
+            
+            if (result.StatusCode == 200)
+            {
+                return Ok(result.Result());
+            }
+
+            return BadRequest(result.Result());
         }
     }
 

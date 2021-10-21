@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MusicQuizAPI.Models
 {
+    [NotMapped]
     public class ResultContext<T>
     {
         public int StatusCode { get; private set; } = 200;

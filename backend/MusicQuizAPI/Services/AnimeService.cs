@@ -9,8 +9,8 @@ namespace MusicQuizAPI.Services
 {
     public class AnimeService
     {
-        private List<AnimeModel> _animes = new List<AnimeModel>();
-        private List<string> _topTitles = new List<string>();
+        private static List<AnimeModel> _animes = new List<AnimeModel>();
+        private static List<string> _topTitles = new List<string>();
         private readonly ILogger<AnimeService> _logger;
         private readonly Random _rnd = new Random();
 
@@ -19,7 +19,7 @@ namespace MusicQuizAPI.Services
             _logger = logger;
         }
 
-        public void Update()
+        public static void Update()
         {
             _animes = APIHelper.GetAnimes().Result;
             _topTitles = APIHelper.GetTopTitles();
