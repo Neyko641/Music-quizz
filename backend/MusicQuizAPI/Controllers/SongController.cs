@@ -18,13 +18,13 @@ namespace MusicQuizAPI.Controllers
     [EnableCors("MusicQuizPolicy")]
     [ApiController]
     [Route("api/song")]
-    public class RandomSongController : ControllerBase
+    public class SongController : ControllerBase
     {
         private readonly AnimeService _animeService;
         private readonly UserService _userService;
-        private readonly ILogger<RandomSongController> _logger;
+        private readonly ILogger<SongController> _logger;
 
-        public RandomSongController(AnimeService animeService, ILogger<RandomSongController> logger, UserService userService)
+        public SongController(AnimeService animeService, ILogger<SongController> logger, UserService userService)
         {
             _animeService = animeService;
             _logger = logger;
@@ -37,6 +37,24 @@ namespace MusicQuizAPI.Controllers
             var result = new ResultContext<List<DetailedAnimeModel>>();
 
             result.AddData(await _animeService.GetRandomAnimes(parameters.Count, parameters.Difficulty));
+            
+            return Ok(result.Result());
+        }
+
+        [HttpGet("search")]
+        public IActionResult Search([FromQuery]SearchSongParamModel parameters)
+        {
+            var result = new ResultContext<IEnumerable<AnimeModel>>();
+
+            if (parameters.SearchType == "anime-title")
+            {
+                result.AddData(_animeService.SearchSongByAnimeTitle(parameters.Value));
+            }
+            else if (parameters.SearchType == "song-title")
+            {
+                result.AddData(_animeService.SearchSongBySongTitle(parameters.Value));
+            }
+            else result.AddExceptionMessage("Something went wrong.");
             
             return Ok(result.Result());
         }

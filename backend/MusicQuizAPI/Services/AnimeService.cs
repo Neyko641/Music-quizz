@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 using System;
 using MusicQuizAPI.Models;
 using MusicQuizAPI.Helpers;
 using Microsoft.Extensions.Logging;
+
 
 namespace MusicQuizAPI.Services
 {
@@ -58,6 +60,45 @@ namespace MusicQuizAPI.Services
             return await APIHelper.GetAnimesDetails(animeList);
         }
 
+        public IEnumerable<SongModel> GetSongs() => _animes.Select(a => a.song);
+
+        public IEnumerable<AnimeModel> SearchSongBySongTitle(string title) 
+        {
+            return _animes
+            .Where(a => 
+            {
+                if (a != null && a.song != null)
+                {
+                    return a.song.title.ToLower().Contains(title.ToLower());
+                }
+                return false;
+            })
+            .Select(a => 
+            {
+                a.difficulty = GetAnimeDifficulty(a.source);
+                return a;
+            });
+        }
+            
+
+        public IEnumerable<AnimeModel> SearchSongByAnimeTitle(string title) 
+        {
+            return _animes
+            .Where(a => 
+            {
+                if (a != null && a.source != null && a.song != null)
+                {
+                    return a.source.ToLower().Contains(title.ToLower());
+                }
+                return false;
+            })
+            .Select(a => 
+            {
+                a.difficulty = GetAnimeDifficulty(a.source);
+                return a;
+            });
+        }
+
         private string GetAnimeDifficulty(string title)
         {
             /*
@@ -66,15 +107,8 @@ namespace MusicQuizAPI.Services
             TOP >300    => Hard
             */
 
-            for (int i = 0; i < _topTitles.Count; i++)
-            {
-                if (_topTitles[i] == title)
-                {
-                    return i < 150 ? "easy" : "medium";
-                }
-            }
-
-            return "hard";
+            var i = _topTitles.IndexOf(title);
+            return i < 0 ? "hard" : (i < 150 ? "easy" : "medium");
         }
     }
 }
