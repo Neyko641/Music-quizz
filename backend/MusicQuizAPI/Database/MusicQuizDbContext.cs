@@ -11,5 +11,8 @@ namespace MusicQuizAPI.Database
         public DbSet<FavoriteAnime> FavoriteAnimes { get; set; }
         public DbSet<FavoriteSong> FavoriteSongs { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
+        public DbSet<Anime> Animes { get; set; }
+        public DbSet<TopAnime> TopAnimes { get; set; }
+        public DbSet<Song> Songs { get; set; }
     }
 }

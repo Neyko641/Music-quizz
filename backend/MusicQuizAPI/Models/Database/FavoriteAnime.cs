@@ -6,9 +6,15 @@ namespace MusicQuizAPI.Models.Database
     {
         [Key]
         public int ID { get; set; }
+
         [Required]
         public int UserID { get; set; }
+        
         [Required]
-        public string AnimeTitle { get; set; }
+        public int AnimeID { get; set; }
+
+        public Anime Anime { get; set; }
+        
+        public User User { get; set; }
     }
 }

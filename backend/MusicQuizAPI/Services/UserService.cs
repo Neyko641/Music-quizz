@@ -39,7 +39,7 @@ namespace MusicQuizAPI.Services
 
             var user = _repo.GetUserByUsername(username);
 
-            if (user != null) return user.ID;
+            if (user != null) return user.UserID;
             else return -1;
         }
 

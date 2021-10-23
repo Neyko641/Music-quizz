@@ -81,7 +81,7 @@ namespace MusicQuizAPI.Helpers
                         {
                             var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
-                            var token = GenerateToken(secret, user.ID.ToString());
+                            var token = GenerateToken(secret, user.UserID.ToString());
 
                             result.AddData(new 
                             {

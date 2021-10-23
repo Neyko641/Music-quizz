@@ -9,11 +9,12 @@ using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
 using MusicQuizAPI.Helpers;
 using MusicQuizAPI.Models.Parameters;
+using MusicQuizAPI.Models.API;
 using Microsoft.AspNetCore.Authorization;
 
 namespace MusicQuizAPI.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [EnableCors("MusicQuizPolicy")]
     [ApiController]
     [Route("/anime")]
@@ -28,14 +29,14 @@ namespace MusicQuizAPI.Controllers
             _userService = userService;
         }
 
-        [HttpPost(Name = "add-favorite")]
-        public async Task<IActionResult> Get([FromQuery]RandomSongParamModel parameters) 
-        {
-            var result = new ResultContext<List<DetailedAnimeModel>>();
+        // [HttpGet("add-favorite")]
+        // public async Task<IActionResult> AddToFavorites([FromQuery]RandomSongParamModel parameters) 
+        // {
+        //     var result = new ResultContext<List<DetailedAnimeModel>>();
 
-            result.AddData(await _animeService.GetRandomAnimes(parameters.Count, parameters.Difficulty));
+        //     result.AddData(await _animeService.GetRandomAnimes(parameters.Count, parameters.Difficulty));
             
-            return Ok(result.Result());
-        }
+        //     return Ok(result.Result());
+        // }
     }
 }

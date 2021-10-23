@@ -72,8 +72,9 @@ namespace MusicQuizAPI
             services.AddSingleton<IConfiguration>(Configuration);
             services.AddScoped<MusicQuizRepository>();
             services.AddScoped<AnimeService>();
+            services.AddScoped<SongService>();
             services.AddScoped<UserService>();
-            services.AddHostedService<AnimeHostedService>();
+            services.AddScoped<InitialDatabaseService>();
 
             // Adding MVC Routing
             services.AddMvc(opts =>

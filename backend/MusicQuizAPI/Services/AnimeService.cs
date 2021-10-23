@@ -2,113 +2,60 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using System;
-using MusicQuizAPI.Models;
+using MusicQuizAPI.Models.API;
 using MusicQuizAPI.Helpers;
 using Microsoft.Extensions.Logging;
-
+using MusicQuizAPI.Database;
+using MusicQuizAPI.Models.Database;
 
 namespace MusicQuizAPI.Services
 {
     public class AnimeService
     {
-        private static List<AnimeModel> _animes = new List<AnimeModel>();
-        private static List<string> _topTitles = new List<string>();
         private readonly ILogger<AnimeService> _logger;
         private readonly Random _rnd = new Random();
+        private readonly MusicQuizRepository _repo;
+        private int _animesCount;
+        private int _songCount;
 
-        public AnimeService(ILogger<AnimeService> logger)
+        public AnimeService(ILogger<AnimeService> logger, MusicQuizRepository repo)
         {
             _logger = logger;
+            _repo = repo;
+            _animesCount = _repo.AnimesCount;
+            _songCount = _repo.SongCount;
         }
 
-        public static void Update()
+        public List<AnimeModel> GetAllAnimesFromAPI()
         {
-            _animes = APIHelper.GetAnimes().Result;
-            _topTitles = APIHelper.GetTopTitles();
-
-            FileHelper.WriteToAnimes(_animes);
-            FileHelper.WriteToTopAnimes(_topTitles);
-        }
-
-        public async Task<List<DetailedAnimeModel>> GetRandomAnimes(int count, string difficulty)
-        {
-            List<AnimeModel> animeList = new List<AnimeModel>();
-            AnimeModel anime;
-            int index;
-
-            while (count > 0)
+            var animes = APIHelper.GetAnimes().Result;
+            var result = new List<AnimeModel>();
+            animes.ForEach(anime => 
             {
-                index = _rnd.Next(_animes.Count);
-                anime = _animes[index];
-
-                if (!animeList.Contains(anime))
+                if (anime == null || anime == default(AnimeModel)) return;
+                if (string.IsNullOrWhiteSpace(anime.difficulty) && !string.IsNullOrWhiteSpace(anime.source))
                 {
-                    if (string.IsNullOrEmpty(anime.difficulty))
-                    {
-                        anime.difficulty = GetAnimeDifficulty(anime.source);
-                        _animes.Insert(index, anime);
-                    }
-
-                    if (anime.difficulty == difficulty)
-                    {
-                        animeList.Add(anime);
-                        count--;
-                    }
+                    anime.difficulty = GetAnimeDifficulty(anime.source);
+                    result.Add(anime);
                 }
-            }
-
-            return await APIHelper.GetAnimesDetails(animeList);
-        }
-
-        public IEnumerable<SongModel> GetSongs() => _animes.Select(a => a.song);
-
-        public IEnumerable<AnimeModel> SearchSongBySongTitle(string title) 
-        {
-            return _animes
-            .Where(a => 
-            {
-                if (a != null && a.song != null)
-                {
-                    return a.song.title.ToLower().Contains(title.ToLower());
-                }
-                return false;
-            })
-            .Select(a => 
-            {
-                a.difficulty = GetAnimeDifficulty(a.source);
-                return a;
             });
-        }
-            
 
-        public IEnumerable<AnimeModel> SearchSongByAnimeTitle(string title) 
-        {
-            return _animes
-            .Where(a => 
-            {
-                if (a != null && a.source != null && a.song != null)
-                {
-                    return a.source.ToLower().Contains(title.ToLower());
-                }
-                return false;
-            })
-            .Select(a => 
-            {
-                a.difficulty = GetAnimeDifficulty(a.source);
-                return a;
-            });
+            return result;
         }
 
         private string GetAnimeDifficulty(string title)
         {
-            /*
-            TOP 1-150   => Easy
-            TOP 150-300 => Medium
-            TOP >300    => Hard
-            */
+            int easyRankLimit = 150;
+            int mediumRankLimit = 300;
 
-            var i = _topTitles.IndexOf(title);
-            return i < 0 ? "hard" : (i < 150 ? "easy" : "medium");
+            if (_repo.ExistTopAnime(title))
+            {
+                var i = _repo.GetAnimeRank(title);
+                return i < easyRankLimit ? "easy" : (i < mediumRankLimit ? "medium" : "hard");
+            }
+            return "hard";
         }
+    
+        
     }
 }

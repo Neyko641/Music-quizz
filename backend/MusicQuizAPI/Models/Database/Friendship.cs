@@ -7,10 +7,13 @@ namespace MusicQuizAPI.Models.Database
     {
         [Key]
         public int ID { get; set; }
+
         [Required]
         public int RequestedUserID { get; set; }
+
         [Required]
         public int AcceptedUserID { get; set; }
+        
         [Required]
         public DateTime StartDate { get; set; }
     }

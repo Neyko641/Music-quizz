@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MusicQuizAPI.Models
+namespace MusicQuizAPI.Models.API
 {
     [NotMapped]
     public class DetailedAnimeModel : AnimeModel

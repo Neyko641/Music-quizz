@@ -6,7 +6,7 @@ using System.Text;
 using System.Linq;
 using System;
 using Newtonsoft.Json;
-using MusicQuizAPI.Models;
+using MusicQuizAPI.Models.API;
 
 
 namespace MusicQuizAPI.Helpers

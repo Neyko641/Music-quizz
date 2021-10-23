@@ -11,6 +11,7 @@ using MusicQuizAPI.Services;
 using MusicQuizAPI.Helpers;
 using MusicQuizAPI.Extensions;
 using MusicQuizAPI.Models.Parameters;
+using MusicQuizAPI.Models.Database;
 
 namespace MusicQuizAPI.Controllers
 {
@@ -20,23 +21,24 @@ namespace MusicQuizAPI.Controllers
     [Route("api/song")]
     public class SongController : ControllerBase
     {
-        private readonly AnimeService _animeService;
+        private readonly SongService _songService;
         private readonly UserService _userService;
         private readonly ILogger<SongController> _logger;
 
-        public SongController(AnimeService animeService, ILogger<SongController> logger, UserService userService)
+        public SongController(SongService songService, ILogger<SongController> logger, UserService userService)
         {
-            _animeService = animeService;
+            _songService = songService;
             _logger = logger;
             _userService = userService;
         }
 
         [HttpGet("random")]
-        public async Task<IActionResult> Random([FromQuery]RandomSongParamModel parameters) 
+        public IActionResult Random([FromQuery]RandomSongParamModel parameters) 
         {
-            var result = new ResultContext<List<DetailedAnimeModel>>();
+            var result = new ResultContext();
 
-            result.AddData(await _animeService.GetRandomAnimes(parameters.Count, parameters.Difficulty));
+            result.AddData(_songService.GetRandomSongs(parameters.Count, parameters.Difficulty)
+                .Select(s => ModelConverter.FromSong(s)));
             
             return Ok(result.Result());
         }
@@ -44,17 +46,10 @@ namespace MusicQuizAPI.Controllers
         [HttpGet("search")]
         public IActionResult Search([FromQuery]SearchSongParamModel parameters)
         {
-            var result = new ResultContext<IEnumerable<AnimeModel>>();
+            var result = new ResultContext();
 
-            if (parameters.SearchType == "anime-title")
-            {
-                result.AddData(_animeService.SearchSongByAnimeTitle(parameters.Value));
-            }
-            else if (parameters.SearchType == "song-title")
-            {
-                result.AddData(_animeService.SearchSongBySongTitle(parameters.Value));
-            }
-            else result.AddExceptionMessage("Something went wrong.");
+            result.AddData(_songService.SearchSong(parameters.Value, parameters.SearchType)
+                .Select(s => ModelConverter.FromSong(s)));
             
             return Ok(result.Result());
         }
