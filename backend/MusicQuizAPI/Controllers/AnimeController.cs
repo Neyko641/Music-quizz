@@ -17,26 +17,54 @@ namespace MusicQuizAPI.Controllers
     [Authorize]
     [EnableCors("MusicQuizPolicy")]
     [ApiController]
-    [Route("/anime")]
+    [Route("api/anime")]
     public class AnimeController : ControllerBase
     {
         private readonly AnimeService _animeService;
         private readonly UserService _userService;
+        private readonly FavoriteAnimeService _favoriteAnimeService;
 
-        public AnimeController(AnimeService animeService, UserService userService)
+        public AnimeController(AnimeService animeService, UserService userService,
+            FavoriteAnimeService favoriteAnimeService)
         {
             _animeService = animeService;
             _userService = userService;
+            _favoriteAnimeService = favoriteAnimeService;
         }
 
-        // [HttpGet("add-favorite")]
-        // public async Task<IActionResult> AddToFavorites([FromQuery]RandomSongParamModel parameters) 
-        // {
-        //     var result = new ResultContext<List<DetailedAnimeModel>>();
+        [HttpGet("add-favorite")]
+        public IActionResult AddToFavorites(string title) => PerformAction("add-favorite", title);
 
-        //     result.AddData(await _animeService.GetRandomAnimes(parameters.Count, parameters.Difficulty));
-            
-        //     return Ok(result.Result());
-        // }
+
+        [HttpGet("remove-favorite")]
+        public IActionResult RemoveFromFavorites(string title) => PerformAction("remove-favorite", title);
+
+
+        [HttpGet("get-favorites")]
+        public IActionResult GetFavorites() => PerformAction("get-favorites");
+
+
+
+        private IActionResult PerformAction(string action, string value = "")
+        {
+            var user = ClientHelper.GetUserFromHttpContext(HttpContext, _userService);
+
+            if (user != null)
+            {
+                ResultContext result;
+                
+                switch (action)
+                {
+                    case "add-favorite": result = _favoriteAnimeService.AddFavoriteAnime(user, value); break;
+                    case "remove-favorite": result = _favoriteAnimeService.RemoveFavoriteAnime(user, value); break;
+                    case "get-favorites": result = _favoriteAnimeService.GetFavorites(user); break;
+                    default: result = new ResultContext(); break;
+                }
+
+                if (result.StatusCode == 200) return Ok(result.Result());
+                else return BadRequest(result.Result());
+            }
+            return Unauthorized();
+        }
     }
 }

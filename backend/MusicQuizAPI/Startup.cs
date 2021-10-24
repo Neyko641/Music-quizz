@@ -70,8 +70,17 @@ namespace MusicQuizAPI
 
             // Adding DI services
             services.AddSingleton<IConfiguration>(Configuration);
-            services.AddScoped<MusicQuizRepository>();
+
+            services.AddScoped<AnimeRepository>();
+            services.AddScoped<FavoriteAnimeRepository>();
+            services.AddScoped<FavoriteSongRepository>();
+            services.AddScoped<FriendshipRepository>();
+            services.AddScoped<SongRepository>();
+            services.AddScoped<TopAnimeRepository>();
+            services.AddScoped<UserRepository>();
+
             services.AddScoped<AnimeService>();
+            services.AddScoped<FavoriteAnimeService>();
             services.AddScoped<SongService>();
             services.AddScoped<UserService>();
             services.AddScoped<InitialDatabaseService>();

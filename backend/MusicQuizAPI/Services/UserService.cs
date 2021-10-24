@@ -12,32 +12,32 @@ namespace MusicQuizAPI.Services
     {
         private readonly ILogger<UserService> _logger;
 
-        private MusicQuizRepository _repo;
+        private UserRepository _userRepo;
 
-        public UserService(ILogger<UserService> logger, MusicQuizRepository repo)
+        public UserService(ILogger<UserService> logger, UserRepository userRepo)
         {
             _logger = logger;
-            _repo = repo;
+            _userRepo = userRepo;
         }
 
         public bool RegisterUser(string username, string password)
         {
-            if (_repo.ExistUser(username) || string.IsNullOrWhiteSpace(username)
+            if (_userRepo.Exist(username) || string.IsNullOrWhiteSpace(username)
                 || string.IsNullOrWhiteSpace(password)) return false;
 
-            _repo.AddUser(new User 
+            _userRepo.Add(new User 
             { 
                 Username = username, Password = password, RegisteredDate = DateTime.Now
             });
 
-            return _repo.ExistUser(username);
+            return _userRepo.Exist(username);
         }
 
         public int GetIDByUsername(string username)
         {
             if (string.IsNullOrWhiteSpace(username)) return -1;
 
-            var user = _repo.GetUserByUsername(username);
+            var user = _userRepo.Get(username);
 
             if (user != null) return user.UserID;
             else return -1;
@@ -47,14 +47,14 @@ namespace MusicQuizAPI.Services
         {
             if (id < 0) return null;
 
-            return _repo.GetUserByID(id);
+            return _userRepo.Get(id);
         }
 
         public User GetByUsername(string username)
         {
             if (string.IsNullOrWhiteSpace(username)) return null;
 
-            return _repo.GetUserByUsername(username);
+            return _userRepo.Get(username);
         }
     }
 }

@@ -13,14 +13,17 @@ namespace MusicQuizAPI.Services
     public class InitialDatabaseService
     {
         private readonly ILogger<InitialDatabaseService> _logger;
-        private readonly MusicQuizRepository _repo;
-        private readonly AnimeService _animeService;
+        private readonly AnimeRepository _animeRepo;
+        private readonly SongRepository _songRepo;
+        private readonly TopAnimeRepository _topAnimeRepo;
 
-        public InitialDatabaseService(ILogger<InitialDatabaseService> logger, MusicQuizRepository repo, AnimeService animeService)
+        public InitialDatabaseService(ILogger<InitialDatabaseService> logger, AnimeRepository animeRepo,
+            SongRepository songRepo, TopAnimeRepository topAnimeRepo)
         {
             _logger = logger;
-            _repo = repo;
-            _animeService = animeService;
+            _animeRepo = animeRepo;
+            _songRepo = songRepo;
+            _topAnimeRepo = topAnimeRepo;
         }
 
         public void InitializeAnimesAndSongs()
@@ -30,7 +33,7 @@ namespace MusicQuizAPI.Services
             _logger.LogInformation("Start ----\nInitiating the database tables 'Animes' and 'Songs' seeding!");
             
             _logger.LogInformation("1. Gettings all animes! ...");
-            List<AnimeModel> animes = _animeService.GetAllAnimesFromAPI();
+            List<AnimeModel> animes = GetAllAnimesFromAPI();
             _logger.LogInformation("... All animes are here.");
 
             int animeCount = animes.Count;
@@ -44,15 +47,15 @@ namespace MusicQuizAPI.Services
             {
                 if (anime != null && !string.IsNullOrWhiteSpace(anime.source))
                 {
-                    if (!_repo.ExistAnime(anime.source))
+                    if (!_animeRepo.Exist(anime.source))
                     {
-                        if (_repo.AddAnime(new Anime { Title = anime.source }) > 0) animeAddedToDb++;
+                        if (_animeRepo.Add(new Anime { Title = anime.source }) > 0) animeAddedToDb++;
                     }
                     
                     DetailedAnimeModel detailedAnime = APIHelper.GetAnimeDetails(anime);
                     detailedAnimeCount++;
 
-                    Anime animeDb = _repo.GetAnimeByTitle(anime.source);
+                    Anime animeDb = _animeRepo.Get(anime.source);
 
                     if (animeDb.Songs == null) animeDb.Songs = new List<Song>();
 
@@ -76,7 +79,7 @@ namespace MusicQuizAPI.Services
                         }
                         catch (Exception) {continue;}
 
-                        if (_repo.AddSong(song) > 0)
+                        if (_songRepo.Add(song) > 0)
                         {
                             if (animeDb.Songs.Any(s => s.Title == detailedAnime.song.title))
                             {
@@ -111,11 +114,11 @@ namespace MusicQuizAPI.Services
             for (int i = 0; i < topTitles.Count; i++)
             {
                 string title = topTitles[i];
-                if (!_repo.ExistTopAnime(title))
+                if (!_topAnimeRepo.Exist(title))
                 {
                     TopAnime anime = new TopAnime { Title = title, Rank = i+1 };
 
-                    if (_repo.AddTopAnime(anime) > 0) addedAnimesCount++;
+                    if (_topAnimeRepo.Add(anime) > 0) addedAnimesCount++;
                 }
             }
 
@@ -124,6 +127,36 @@ namespace MusicQuizAPI.Services
 
             _logger.LogInformation($"Top animes added - {addedAnimesCount}\n\n"
             + $"Time elapsed - {watch.Elapsed.Seconds} Seconds.\n ---- End!");
+        }
+
+        public List<AnimeModel> GetAllAnimesFromAPI()
+        {
+            var animes = APIHelper.GetAnimes().Result;
+            var result = new List<AnimeModel>();
+            animes.ForEach(anime => 
+            {
+                if (anime == null || anime == default(AnimeModel)) return;
+                if (string.IsNullOrWhiteSpace(anime.difficulty) && !string.IsNullOrWhiteSpace(anime.source))
+                {
+                    anime.difficulty = GetAnimeDifficulty(anime.source);
+                    result.Add(anime);
+                }
+            });
+
+            return result;
+        }
+
+        private string GetAnimeDifficulty(string title)
+        {
+            int easyRankLimit = 150;
+            int mediumRankLimit = 300;
+
+            if (_topAnimeRepo.Exist(title))
+            {
+                var i = _topAnimeRepo.Get(title).Rank;
+                return i < easyRankLimit ? "easy" : (i < mediumRankLimit ? "medium" : "hard");
+            }
+            return "hard";
         }
     }
 }

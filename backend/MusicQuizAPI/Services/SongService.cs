@@ -13,17 +13,20 @@ namespace MusicQuizAPI.Services
     public class SongService
     {
         private readonly ILogger<SongService> _logger;
-        private readonly Random _rnd = new Random();
-        private readonly MusicQuizRepository _repo;
-        private int _animesCount;
+        private readonly Random _rnd;
+        private readonly SongRepository _songRepo;
+        private readonly AnimeRepository _animeRepo;
         private int _songCount;
 
-        public SongService(ILogger<SongService> logger, MusicQuizRepository repo)
+        public SongService(ILogger<SongService> logger, SongRepository songRepo,
+            AnimeRepository animeRepo)
         {
             _logger = logger;
-            _repo = repo;
-            _animesCount = _repo.AnimesCount;
-            _songCount = _repo.SongCount;
+            _songRepo = songRepo;
+            _animeRepo = animeRepo;
+            _songCount = _songRepo.Count;
+
+            _rnd = new Random();
         }
 
         public List<Song> GetRandomSongs(int count, string difficulty)
@@ -35,13 +38,13 @@ namespace MusicQuizAPI.Services
             while (count > 0)
             {
                 index = _rnd.Next(_songCount);
-                song = _repo.GetSongByID(index);
+                song = _songRepo.Get(index);
 
                 if (!songs.Contains(song))
                 {
                     if (song.Difficulty == difficulty)
                     {
-                        song.Anime = _repo.GetAnimeByID(song.AnimeID);
+                        song.Anime = _animeRepo.Get(song.AnimeID);
                         songs.Add(song);
                         count--;
                     }
@@ -60,12 +63,12 @@ namespace MusicQuizAPI.Services
                 switch (searchType)
                 {
                     case "anime-title": 
-                        songs = _repo.GetSongsThatContainsAnimeTitle(title.ToLower()).ToList();
-                        songs.ForEach(s => s.Anime = _repo.GetAnimeByID(s.AnimeID)); 
+                        songs = _songRepo.GetAllThatContainsAnimeTitle(title.ToLower()).ToList();
+                        songs.ForEach(s => s.Anime = _animeRepo.Get(s.AnimeID)); 
                         break;
                     case "song-title": 
-                        songs = _repo.GetSongsThatContainsSongTitle(title.ToLower()).ToList(); 
-                        songs.ForEach(s => s.Anime = _repo.GetAnimeByID(s.AnimeID)); 
+                        songs = _songRepo.GetAllThatContainsSongTitle(title.ToLower()).ToList(); 
+                        songs.ForEach(s => s.Anime = _animeRepo.Get(s.AnimeID)); 
                         break;
                 }
             }

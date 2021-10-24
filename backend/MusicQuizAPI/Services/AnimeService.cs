@@ -7,55 +7,21 @@ using MusicQuizAPI.Helpers;
 using Microsoft.Extensions.Logging;
 using MusicQuizAPI.Database;
 using MusicQuizAPI.Models.Database;
+using MusicQuizAPI.Models;
 
 namespace MusicQuizAPI.Services
 {
     public class AnimeService
     {
         private readonly ILogger<AnimeService> _logger;
-        private readonly Random _rnd = new Random();
-        private readonly MusicQuizRepository _repo;
-        private int _animesCount;
-        private int _songCount;
+        private readonly AnimeRepository _animeRepo;
 
-        public AnimeService(ILogger<AnimeService> logger, MusicQuizRepository repo)
+        public AnimeService(ILogger<AnimeService> logger, AnimeRepository animeRepo)
         {
             _logger = logger;
-            _repo = repo;
-            _animesCount = _repo.AnimesCount;
-            _songCount = _repo.SongCount;
+            _animeRepo = animeRepo;
         }
 
-        public List<AnimeModel> GetAllAnimesFromAPI()
-        {
-            var animes = APIHelper.GetAnimes().Result;
-            var result = new List<AnimeModel>();
-            animes.ForEach(anime => 
-            {
-                if (anime == null || anime == default(AnimeModel)) return;
-                if (string.IsNullOrWhiteSpace(anime.difficulty) && !string.IsNullOrWhiteSpace(anime.source))
-                {
-                    anime.difficulty = GetAnimeDifficulty(anime.source);
-                    result.Add(anime);
-                }
-            });
-
-            return result;
-        }
-
-        private string GetAnimeDifficulty(string title)
-        {
-            int easyRankLimit = 150;
-            int mediumRankLimit = 300;
-
-            if (_repo.ExistTopAnime(title))
-            {
-                var i = _repo.GetAnimeRank(title);
-                return i < easyRankLimit ? "easy" : (i < mediumRankLimit ? "medium" : "hard");
-            }
-            return "hard";
-        }
-    
         
     }
 }

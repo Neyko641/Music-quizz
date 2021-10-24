@@ -16,5 +16,12 @@ namespace MusicQuizAPI.Models
                 difficulty = song.Difficulty
             };
         }
+
+        public static object FromAnime(Anime a)
+        {
+            return new {
+                title = a.Title
+            };
+        }
     }
 }
