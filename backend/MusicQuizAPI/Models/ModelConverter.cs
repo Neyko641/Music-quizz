@@ -7,6 +7,7 @@ namespace MusicQuizAPI.Models
         public static object FromSong(Song song)
         {
             return new {
+                id = song.SongID,
                 title = song.Title,
                 artist = song.Artist,
                 anime_title = song.Anime.Title,
@@ -17,10 +18,11 @@ namespace MusicQuizAPI.Models
             };
         }
 
-        public static object FromAnime(Anime a)
+        public static object FromAnime(Anime anime)
         {
             return new {
-                title = a.Title
+                id = anime.AnimeID,
+                title = anime.Title
             };
         }
     }

@@ -1,9 +1,4 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Linq;
-using System;
-using MusicQuizAPI.Models.API;
-using MusicQuizAPI.Helpers;
 using Microsoft.Extensions.Logging;
 using MusicQuizAPI.Database;
 using MusicQuizAPI.Models.Database;
@@ -16,6 +11,7 @@ namespace MusicQuizAPI.Services
         private readonly ILogger<AnimeService> _logger;
         private readonly AnimeRepository _animeRepo;
         private readonly FavoriteAnimeRepository _favAnimeRepo;
+        private readonly int _animeCount;
 
         public FavoriteAnimeService(ILogger<AnimeService> logger, AnimeRepository animeRepo,
             FavoriteAnimeRepository favAnimeRepo)
@@ -23,68 +19,60 @@ namespace MusicQuizAPI.Services
             _logger = logger;
             _animeRepo = animeRepo;
             _favAnimeRepo = favAnimeRepo;
+            _animeCount = _animeRepo.Count;
         }
 
-        public ResultContext AddFavoriteAnime(User user, string title)
+        public ResultContext AddFavoriteAnime(User user, int id)
         {
             ResultContext result = new ResultContext();
 
-            if (!string.IsNullOrWhiteSpace(title))
+            if (id >= 0 && id <= _animeCount)
             {
-                Anime anime = _animeRepo.Get(title);
-
-                if (anime != null && anime != default(Anime))
+                if (!_favAnimeRepo.Exist(user.UserID, id))
                 {
-                    if (!_favAnimeRepo.Exist(user.UserID, anime.AnimeID))
+                    FavoriteAnime fa = new FavoriteAnime
                     {
-                        FavoriteAnime fa = new FavoriteAnime
-                        {
-                            UserID = user.UserID,
-                            AnimeID = anime.AnimeID,
-                        };
+                        UserID = user.UserID,
+                        AnimeID = id,
+                    };
 
-                        if (_favAnimeRepo.Add(fa) > 0)
-                        {
-                            result.AddData($"'{title}' added successfully to the user {user.Username}!");
-                        }   
-                        else result.AddExceptionMessage($"Something went wrong." + 
-                            $"Cannot add anime '{title}' in favorites for user {user.Username}!");
-                    }
-                    else result.AddExceptionMessage($"Anime '{title}' is already in favorites for user {user.Username}!");
+                    if (_favAnimeRepo.Add(fa) > 0)
+                    {
+                        result.AddData($"The anime with id of [{id}] " +
+                        $"was added successfully to the user {user.Username}!");
+                    }   
+                    else result.AddExceptionMessage($"Something went wrong. " + 
+                        $"Cannot add anime with id of [{id}] in favorites for user {user.Username}!");
                 }
-                else result.AddExceptionMessage($"Cannot find anime with title '{title}'!");
+                else result.AddExceptionMessage($"The anime with id of [{id}] " + 
+                    $"is already in favorites for user {user.Username} or doesn't exist!");
             }
-            else result.AddExceptionMessage($"'title' parameter is required!");
+            else result.AddExceptionMessage($"'id' parameter is required and must be positive number!");
 
             return result;
         }
     
-        public ResultContext RemoveFavoriteAnime(User user, string title)
+        public ResultContext RemoveFavoriteAnime(User user, int id)
         {
             ResultContext result = new ResultContext();
 
-            if (!string.IsNullOrWhiteSpace(title))
+            if (id >= 0 && id <= _animeCount)
             {
-                Anime anime = _animeRepo.Get(title);
+                FavoriteAnime fa = _favAnimeRepo.Get(user.UserID, id);
 
-                if (anime != null && anime != default(Anime))
+                if (fa != null && fa != default(FavoriteAnime))
                 {
-                    FavoriteAnime fa = _favAnimeRepo.Get(user.UserID, anime.AnimeID);
-
-                    if (fa != null && fa != default(FavoriteAnime))
+                    if (_favAnimeRepo.Remove(fa) > 0)
                     {
-                        if (_favAnimeRepo.Remove(fa) > 0)
-                        {
-                            result.AddData($"'{title}' removed successfully from the user {user.Username}!");
-                        }   
-                        else result.AddExceptionMessage($"Something went wrong." + 
-                            $"Cannot remove anime '{title}' from favorites for user {user.Username}!");
-                    }
-                    else result.AddExceptionMessage($"Anime '{title}' is already not in favorites for user {user.Username}!");
+                        result.AddData($"The anime with id of [{id}] removed successfully from the user {user.Username}!");
+                    }   
+                    else result.AddExceptionMessage($"Something went wrong. " + 
+                        $"Cannot remove the anime with id of [{id}] from favorites for user {user.Username}!");
                 }
-                else result.AddExceptionMessage($"Cannot find anime with title '{title}'!");
+                else result.AddExceptionMessage($"The anime with id of [{id}] is already " +
+                    $"not in favorites for user {user.Username}!");
             }
-            else result.AddExceptionMessage($"'title' parameter is required!");
+            else result.AddExceptionMessage($"'id' parameter is required and must be positive number!");
 
             return result;
         }

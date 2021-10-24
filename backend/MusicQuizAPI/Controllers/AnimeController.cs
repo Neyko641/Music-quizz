@@ -33,11 +33,11 @@ namespace MusicQuizAPI.Controllers
         }
 
         [HttpGet("add-favorite")]
-        public IActionResult AddToFavorites(string title) => PerformAction("add-favorite", title);
+        public IActionResult AddToFavorites(int id = -1) => PerformAction("add-favorite", id);
 
 
         [HttpGet("remove-favorite")]
-        public IActionResult RemoveFromFavorites(string title) => PerformAction("remove-favorite", title);
+        public IActionResult RemoveFromFavorites(int id = -1) => PerformAction("remove-favorite", id);
 
 
         [HttpGet("get-favorites")]
@@ -45,7 +45,7 @@ namespace MusicQuizAPI.Controllers
 
 
 
-        private IActionResult PerformAction(string action, string value = "")
+        private IActionResult PerformAction(string action, int value = -1)
         {
             var user = ClientHelper.GetUserFromHttpContext(HttpContext, _userService);
 
