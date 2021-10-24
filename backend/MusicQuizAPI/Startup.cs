@@ -81,6 +81,7 @@ namespace MusicQuizAPI
 
             services.AddScoped<AnimeService>();
             services.AddScoped<FavoriteAnimeService>();
+            services.AddScoped<FavoriteSongService>();
             services.AddScoped<SongService>();
             services.AddScoped<UserService>();
             services.AddScoped<InitialDatabaseService>();

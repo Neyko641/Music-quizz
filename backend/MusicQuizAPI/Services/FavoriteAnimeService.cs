@@ -26,7 +26,7 @@ namespace MusicQuizAPI.Services
         {
             ResultContext result = new ResultContext();
 
-            if (id >= 0 && id <= _animeCount)
+            if (id > 0 && id <= _animeCount)
             {
                 if (!_favAnimeRepo.Exist(user.UserID, id))
                 {
@@ -56,7 +56,7 @@ namespace MusicQuizAPI.Services
         {
             ResultContext result = new ResultContext();
 
-            if (id >= 0 && id <= _animeCount)
+            if (id > 0 && id <= _animeCount)
             {
                 FavoriteAnime fa = _favAnimeRepo.Get(user.UserID, id);
 
