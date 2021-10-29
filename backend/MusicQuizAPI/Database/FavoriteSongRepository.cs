@@ -18,12 +18,22 @@ namespace MusicQuizAPI.Database
         public int Add(FavoriteSong fs)
         {
             Db.FavoriteSongs.Add(fs);
-            return Db.SaveChanges();
+            int result = Db.SaveChanges();
+            if (result > 0) IncrementSongPopularity(fs.SongID);
+            return result;
         }
 
         public int Remove(FavoriteSong fs)
         {
             Db.FavoriteSongs.Remove(fs);
+            int result = Db.SaveChanges();
+            if (result > 0) DecrementSongPopularity(fs.SongID);
+            return result;
+        }
+
+        public int Update(FavoriteSong fs)
+        {
+            Db.FavoriteSongs.Update(fs);
             return Db.SaveChanges();
         }
 
@@ -32,5 +42,17 @@ namespace MusicQuizAPI.Database
 
         public IQueryable<FavoriteSong> GetAllByUserID(int id) =>
             Db.FavoriteSongs.Where(fa => fa.UserID == id);
+
+        public void IncrementSongPopularity(int id)
+        {
+            Db.Songs.First(s => s.SongID == id).Popularity++;
+            Db.SaveChanges();
+        }
+
+        public void DecrementSongPopularity(int id)
+        {
+            Db.Songs.First(s => s.SongID == id).Popularity--;
+            Db.SaveChanges();
+        }
     }
 }

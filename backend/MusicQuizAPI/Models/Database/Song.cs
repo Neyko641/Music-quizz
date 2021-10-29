@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace MusicQuizAPI.Models.Database
@@ -22,6 +23,12 @@ namespace MusicQuizAPI.Models.Database
 
         public string Difficulty { get; set; }
 
+        public double Score { get; set; } = 0;
+
+        public int Popularity { get; set; } = 0;
+
         public Anime Anime { get; set; }
+
+        public List<FavoriteSong> Favorites { get; set; }
     }
 }

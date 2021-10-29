@@ -16,5 +16,8 @@ namespace MusicQuizAPI.Models.Database
         
         [Required]
         public DateTime StartDate { get; set; }
+
+        [Required]
+        public bool IsAccepted { get; set; } = false;
     }
 }

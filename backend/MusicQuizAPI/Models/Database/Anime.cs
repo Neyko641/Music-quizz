@@ -11,6 +11,10 @@ namespace MusicQuizAPI.Models.Database
         [Required]
         public string Title { get; set; }
 
+        public double Score { get; set; } = 0;
+
+        public int Popularity { get; set; } = 0;
+
         public List<Song> Songs { get; set; }
 
         public List<FavoriteAnime> Favorites { get; set; }

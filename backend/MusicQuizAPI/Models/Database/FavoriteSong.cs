@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace MusicQuizAPI.Models.Database
@@ -13,8 +14,12 @@ namespace MusicQuizAPI.Models.Database
         [Required]
         public int SongID { get; set; }
 
+        public int Score { get; set; } = 0;
+
         public Song Song { get; set; }
         
         public User User { get; set; }
+
+        public List<FavoriteSong> Favorite { get; set; }
     }
 }

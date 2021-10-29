@@ -22,6 +22,16 @@ namespace MusicQuizAPI.Services
             _animeRepo = animeRepo;
         }
 
-        
+        public List<Anime> SearchAnime(string title) 
+        {
+            List<Anime> animes = new List<Anime>();
+
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                animes = _animeRepo.GetAllThatContainsTitle(title.ToLower()).ToList();
+            }
+
+            return animes;
+        }
     }
 }

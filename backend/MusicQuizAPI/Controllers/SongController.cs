@@ -57,19 +57,27 @@ namespace MusicQuizAPI.Controllers
         }
 
         [HttpGet("add-favorite")]
-        public IActionResult AddToFavorites(int id = -1) => PerformAction("add-favorite", id);
+        public IActionResult AddToFavorites(int id = -1, int score = 0) 
+            => PerformAction("add-favorite", id, score);
 
 
         [HttpGet("remove-favorite")]
-        public IActionResult RemoveFromFavorites(int id = -1) => PerformAction("remove-favorite", id);
+        public IActionResult RemoveFromFavorites(int id = -1) 
+            => PerformAction("remove-favorite", id);
 
 
         [HttpGet("get-favorites")]
-        public IActionResult GetFavorites() => PerformAction("get-favorites");
+        public IActionResult GetFavorites() 
+            => PerformAction("get-favorites");
+
+
+        [HttpGet("update-score")]
+        public IActionResult UpdateFavoriteSongScore(int id = -1, int score = 0) 
+            => PerformAction("update-score", id, score);
 
 
         
-        private IActionResult PerformAction(string action, int value = -1)
+        private IActionResult PerformAction(string action, params int[] values)
         {
             var user = ClientHelper.GetUserFromHttpContext(HttpContext, _userService);
 
@@ -79,10 +87,21 @@ namespace MusicQuizAPI.Controllers
                 
                 switch (action)
                 {
-                    case "add-favorite": result = _favoriteSongService.AddFavoriteSong(user, value); break;
-                    case "remove-favorite": result = _favoriteSongService.RemoveFavoriteSong(user, value); break;
-                    case "get-favorites": result = _favoriteSongService.GetFavorites(user); break;
-                    default: result = new ResultContext(); break;
+                    case "add-favorite": 
+                        result = _favoriteSongService.AddFavoriteSong(user, values[0], values[1]); 
+                        break;
+                    case "remove-favorite": 
+                        result = _favoriteSongService.RemoveFavoriteSong(user, values[0]); 
+                        break;
+                    case "get-favorites": 
+                        result = _favoriteSongService.GetFavorites(user); 
+                        break;
+                    case "update-score": 
+                        result = _favoriteSongService.UpdateFavoriteSongScore(user, values[0], values[1]); 
+                        break;
+                    default: 
+                        result = new ResultContext(); 
+                        break;
                 }
 
                 if (result.StatusCode == 200) return Ok(result.Result());
