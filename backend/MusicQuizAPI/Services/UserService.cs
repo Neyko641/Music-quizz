@@ -5,19 +5,22 @@ using Microsoft.Extensions.Logging;
 using MusicQuizAPI.Database;
 using MusicQuizAPI.Models.Database;
 using MusicQuizAPI.Models;
+using System.Linq;
 
 namespace MusicQuizAPI.Services
 {
     public class UserService
     {
         private readonly ILogger<UserService> _logger;
+        private readonly UserRepository _userRepo;
+        private readonly FriendshipRepository _friendshipRepository;
 
-        private UserRepository _userRepo;
-
-        public UserService(ILogger<UserService> logger, UserRepository userRepo)
+        public UserService(ILogger<UserService> logger, UserRepository userRepo,
+            FriendshipRepository friendshipRepository)
         {
             _logger = logger;
             _userRepo = userRepo;
+            _friendshipRepository = friendshipRepository;
         }
 
         public bool RegisterUser(string username, string password)
@@ -55,6 +58,23 @@ namespace MusicQuizAPI.Services
             if (string.IsNullOrWhiteSpace(username)) return null;
 
             return _userRepo.Get(username);
+        }
+
+        public List<User> SearchUserByName(User user, string name, int limit)
+        {
+            List<User> users = new List<User>();
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                var friends = _friendshipRepository.GetFriends(user.UserID);
+
+                users = _userRepo.GetAllThatContainsName(name.ToLower())
+                    .Take(limit).ToList();
+
+                users.ForEach(u => u.IsFriend = friends.Contains(u));
+            }
+
+            return users;
         }
     }
 }

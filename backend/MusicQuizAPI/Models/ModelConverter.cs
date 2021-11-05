@@ -31,5 +31,18 @@ namespace MusicQuizAPI.Models
                 popular = anime.Popularity,
             };
         }
+
+        public static object FromUser(User user)
+        {
+            return new {
+                id = user.UserID,
+                username = user.Username,
+                avatar = user.Avatar,
+                guess_count = user.GuessCount,
+                played_count = user.PlayCount,
+                registered_date = user.RegisteredDate.ToString("d MMM yyyy"),
+                is_friend = user.IsFriend
+            };
+        }
     }
 }

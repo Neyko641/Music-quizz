@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MusicQuizAPI.Models.Database
 {
@@ -29,5 +30,8 @@ namespace MusicQuizAPI.Models.Database
         public DateTime RegisteredDate { get; set; }
 
         public List<FavoriteAnime> Favorites { get; set; }
+
+        [NotMapped]
+        public bool IsFriend { get; set; } = false;
     }
 }

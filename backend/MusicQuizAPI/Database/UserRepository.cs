@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using MusicQuizAPI.Models.Database;
 
@@ -24,5 +25,8 @@ namespace MusicQuizAPI.Database
             Db.Users.FirstOrDefault(u => u.Username == username);
 
         public User Get(int id) => Db.Users.FirstOrDefault(u => u.UserID == id);
+
+        public List<User> GetAllThatContainsName(string name) 
+            => Db.Users.Where(u => u.Username.ToLower().Contains(name)).ToList();
     }
 }
