@@ -8,8 +8,10 @@ namespace MusicQuizAPI.Models.Parameters
     public class SearchSongParamModel
     {
         [Required]
-        public string Value { get; set; }
+        public string Title { get; set; }
 
+
+        /// <summary> Must be: 'song-title' or 'anime-title'. </summary>
         [SongSearchTypeAttribute]
         public string SearchType { get; set; } = "song-title";
     }

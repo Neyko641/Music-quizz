@@ -3,138 +3,107 @@ using Microsoft.Extensions.Logging;
 using MusicQuizAPI.Database;
 using MusicQuizAPI.Models.Database;
 using MusicQuizAPI.Models;
+using System.Collections.Generic;
 
 namespace MusicQuizAPI.Services
 {
     public class FavoriteSongService
     {
-        private readonly ILogger<FavoriteAnimeService> _logger;
+        private readonly ILogger<FavoriteSongService> _logger;
         private readonly SongRepository _songRepo;
         private readonly FavoriteSongRepository _favSongRepo;
         private readonly AnimeRepository _animeRepo;
-        private readonly int _songCount;
 
-        public FavoriteSongService(ILogger<FavoriteAnimeService> logger, SongRepository songRepo,
+        public FavoriteSongService(ILogger<FavoriteSongService> logger, SongRepository songRepo,
             FavoriteSongRepository favSongRepo, AnimeRepository animeRepo)
         {
             _logger = logger;
             _songRepo = songRepo;
             _favSongRepo = favSongRepo;
-            _songCount = _songRepo.Count;
             _animeRepo = animeRepo;
         }
 
-        public ResultContext AddFavoriteSong(User user, int id, int score)
+        public bool Exist(FavoriteSong favoriteSong)
+            => _favSongRepo.Exist(favoriteSong);
+
+        public bool AddFavorite(FavoriteSong favoriteSong)
         {
-            ResultContext result = new ResultContext();
-
-            if (id > 0 && id <= _songCount && score > 0 && score <= 10)
+            if (!Exist(favoriteSong))
             {
-                if (!_favSongRepo.Exist(user.UserID, id))
+                if (_favSongRepo.Add(favoriteSong) > 0)
                 {
-                    FavoriteSong fs = new FavoriteSong
-                    {
-                        UserID = user.UserID,
-                        SongID = id,
-                        Score = score
-                    };
+                    // Updates the average score of the song
+                    _songRepo.AddScore(favoriteSong.SongID, favoriteSong.Score);
 
-                    if (_favSongRepo.Add(fs) > 0)
-                    {
-                        // Updates the average score of the song
-                        _songRepo.AddScore(id, score);
-
-                        result.AddData($"The song with id of [{id}] " +
-                        $"was added successfully to the user {user.Username}!");
-                    }   
-                    else result.AddExceptionMessage($"Something went wrong. " + 
-                        $"Cannot add song with id of [{id}] in favorites for user {user.Username}!");
-                }
-                else result.AddExceptionMessage($"The song with id of [{id}] " + 
-                    $"is already in favorites for user {user.Username} or doesn't exist!");
+                    return true;
+                }   
+                
+                // It shouldn't be getting here at any condition 
+                return false;
             }
-            else result.AddExceptionMessage($"'id' parameter must be positive number and " + 
-                $"'score' must be between 1 and 10!");
-
-            return result;
-        }
-    
-        public ResultContext RemoveFavoriteSong(User user, int id)
-        {
-            ResultContext result = new ResultContext();
-
-            if (id > 0 && id <= _songCount)
-            {
-                FavoriteSong fs = _favSongRepo.Get(user.UserID, id);
-
-                if (fs != null && fs != default(FavoriteSong))
-                {
-                    if (_favSongRepo.Remove(fs) > 0)
-                    {
-                        // Updates the average score of the song
-                        _songRepo.RemoveScore(id, fs.Score);
-
-                        result.AddData($"The song with id of [{id}] removed successfully from the user {user.Username}!");
-                    }   
-                    else result.AddExceptionMessage($"Something went wrong. " + 
-                        $"Cannot remove the song with id of [{id}] from favorites for user {user.Username}!");
-                }
-                else result.AddExceptionMessage($"The song with id of [{id}] is already " +
-                    $"not in favorites for user {user.Username}!");
-            }
-            else result.AddExceptionMessage($"'id' parameter must be positive number and " + 
-                $"'score' must be between 1 and 10!");
-
-            return result;
+            else return false;
         }
 
-        public ResultContext GetFavorites(User user)
+
+        public bool RemoveFavorite(FavoriteSong favoriteSong)
         {
-            ResultContext result = new ResultContext();
+            FavoriteSong favoriteSongToRemove = _favSongRepo.Get(favoriteSong.UserID, favoriteSong.SongID);
 
-            var favs = _favSongRepo.GetAllByUserID(user.UserID).ToList();
-
-            var temp = favs.Select(fs => 
+            if (favoriteSongToRemove != null && favoriteSongToRemove != default(FavoriteSong))
             {
-                var song = _songRepo.Get(fs.SongID);
-                song.Anime = _animeRepo.Get(song.AnimeID);
-                return ModelConverter.FromSong(song, fs.Score);
+                if (_favSongRepo.Remove(favoriteSongToRemove) > 0)
+                {
+                    // Updates the average score of the song
+                    _songRepo.RemoveScore(favoriteSongToRemove.SongID, favoriteSongToRemove.Score);
+
+                    return true;
+                }   
+
+                // It shouldn't be getting here at any condition 
+                return false;
+            }
+            
+            return false;
+        }
+
+
+        public bool UpdateFavorite(FavoriteSong favoriteSong)
+        {
+            FavoriteSong favoriteSongToUpdate = _favSongRepo.Get(favoriteSong.UserID, favoriteSong.SongID);
+
+            if (favoriteSongToUpdate != null && favoriteSongToUpdate != default(FavoriteSong))
+            {
+                int previousScore = favoriteSongToUpdate.Score;
+                favoriteSongToUpdate.Score = favoriteSong.Score;
+
+                if (_favSongRepo.Update(favoriteSongToUpdate) > 0)
+                {
+                    // Updates the average score of the song
+                    _songRepo.UpdateScore(favoriteSongToUpdate.SongID, 
+                        favoriteSongToUpdate.Score, previousScore);
+
+                    return true;
+                }   
+                
+                // It shouldn't be getting here at any condition 
+                return false;
+            }
+            
+            return false;
+        }
+
+
+        public List<FavoriteSong> GetFavorites(User user)
+        {
+            List<FavoriteSong> favs = _favSongRepo.GetAllByUserID(user.UserID).ToList();
+
+            favs.ForEach(fs =>
+            {
+                fs.Song = _songRepo.Get(fs.SongID);
+                fs.Song.Anime = _animeRepo.Get(fs.Song.AnimeID);
             });
-            result.AddData(temp);
 
-            return result;
-        }
-
-        public ResultContext UpdateFavoriteSongScore(User user, int id, int score)
-        {
-            ResultContext result = new ResultContext();
-
-            if (id > 0 && id <= _songCount && score > 0 && score <= 10)
-            {
-                FavoriteSong fs = _favSongRepo.Get(user.UserID, id);
-
-                if (fs != null && fs != default(FavoriteSong))
-                {
-                    var previousScore = fs.Score;
-                    fs.Score = score;
-
-                    if (_favSongRepo.Update(fs) > 0)
-                    {
-                        // Updates the average score of the song
-                        _songRepo.UpdateScore(id, fs.Score, previousScore);
-
-                        result.AddData($"The song with id of [{id}] updated successfully for the user {user.Username}!");
-                    }   
-                    else result.AddExceptionMessage($"Something went wrong. " + 
-                        $"Cannot update the song with id of [{id}] from favorites for user {user.Username}!");
-                }
-                else result.AddExceptionMessage($"The song with id of [{id}] doesn't " +
-                    $"exist in favorites for user {user.Username}!");
-            }
-            else result.AddExceptionMessage($"'id' parameter must be positive number and " + 
-                $"'score' must be between 1 and 10!");
-
-            return result;
+            return favs;
         }
     }
 }

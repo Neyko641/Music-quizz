@@ -12,8 +12,8 @@ namespace MusicQuizAPI.Database
             Db = db;
         }
 
-        public bool Exist(int userId, int songId) => 
-            Db.FavoriteSongs.Any(fs => fs.UserID == userId && fs.SongID == songId);
+        public bool Exist(FavoriteSong fs) => 
+            Db.FavoriteSongs.Any(s => s.UserID == fs.UserID && s.SongID == fs.SongID);
 
         public int Add(FavoriteSong fs)
         {

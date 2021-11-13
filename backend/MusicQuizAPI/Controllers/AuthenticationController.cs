@@ -17,16 +17,18 @@ namespace MusicQuizAPI.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        private readonly UserService _userService;
-        private readonly ILogger<AuthenticationController> _logger;
+        IConfiguration Configuration { get; set; }
+        UserService UserService { get; set; }
+        ILogger<AuthenticationController> Logger { get; set; }
+        ResultContext Result { get; set; }
 
         public AuthenticationController(ILogger<AuthenticationController> logger, 
             IConfiguration configuration, UserService userService)
         {
-            _logger = logger;
-            _configuration = configuration;
-            _userService = userService;
+            Logger = logger;
+            Configuration = configuration;
+            UserService = userService;
+            Result = new ResultContext();
         }
 
         /*
@@ -39,32 +41,22 @@ namespace MusicQuizAPI.Controllers
         public IActionResult Register()
         {
             string authorizationHeader = Request.Headers["Authorization"].FirstOrDefault();
-            string secret = _configuration["JWT:Secret"];
+            string secret = Configuration["JWT:Secret"];
             
-            ResultContext result = SecurityHelper.RegisterUser(_userService, authorizationHeader, secret);
+            SecurityHelper.RegisterUser(Result, UserService, authorizationHeader, secret);
             
-            if (result.StatusCode == 200)
-            {
-                return Ok(result.Result());
-            }
-
-            return BadRequest(result.Result());
+            return Result.Result();
         }
 
         [HttpPost("login")]
         public IActionResult Login()
         {
             string authorizationHeader = Request.Headers["Authorization"].FirstOrDefault();
-            string secret = _configuration["JWT:Secret"];
+            string secret = Configuration["JWT:Secret"];
             
-            ResultContext result = SecurityHelper.LoginUser(_userService, authorizationHeader, secret);
+            SecurityHelper.LoginUser(Result, UserService, authorizationHeader, secret);
             
-            if (result.StatusCode == 200)
-            {
-                return Ok(result.Result());
-            }
-
-            return BadRequest(result.Result());
+            return Result.Result();
         }
     }
 

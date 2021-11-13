@@ -11,6 +11,7 @@ using MusicQuizAPI.Services;
 using MusicQuizAPI.Helpers;
 using MusicQuizAPI.Extensions;
 using MusicQuizAPI.Models.Parameters;
+using MusicQuizAPI.Models.Database;
 
 namespace MusicQuizAPI.Controllers
 {
@@ -20,105 +21,133 @@ namespace MusicQuizAPI.Controllers
     [Route("api/user")]
     public class UserController : ControllerBase
     {
-        private readonly UserService _userService;
-        private readonly FriendshipService _friendshipService;
-        private readonly ILogger<SongController> _logger;
+        UserService UserService { get; set; }
+        FriendshipService FriendshipService { get; set; }
+        ILogger<UserController> Logger { get; set; }
+        ResultContext Result { get; set; }
 
-        public UserController(ILogger<SongController> logger, UserService userService, 
+        public UserController(ILogger<UserController> logger, UserService userService, 
             FriendshipService friendshipService)
         {
-            _logger = logger;
-            _userService = userService;
-            _friendshipService = friendshipService;
+            Logger = logger;
+            UserService = userService;
+            FriendshipService = friendshipService;
+            Result = new ResultContext();
         }
 
         [HttpGet]
         public IActionResult GetUser()
         {
-            var result = new ResultContext();
-            var user = ClientHelper.GetUserFromHttpContext(HttpContext, _userService);
+            User CurrentUser = (User)HttpContext.Items["User"];
 
-            result.AddData(ModelConverter.FromUser(user));
+            Result.AddData(ModelConverter.FromUser(CurrentUser));
             
-            return Ok(result.Result());
+            return Result.Result();
         }
+
 
         [HttpGet("search")]
-        public IActionResult Search(string name, int limit = 10)
+        public IActionResult Search([FromQuery]SearchUserParamModel parameters)
         {
-            var result = new ResultContext();
-            var user = ClientHelper.GetUserFromHttpContext(HttpContext, _userService);
+            User CurrentUser = (User)HttpContext.Items["User"];
 
-            result.AddData(_userService.SearchUserByName(user, name, limit)
-                .Select(u => ModelConverter.FromUser(u)));
+            List<User> users = UserService.SearchUserByName(CurrentUser, 
+                parameters.Name, parameters.Limit);
+
+            Result.AddData(users.Select(u => ModelConverter.FromUser(u)));
             
-            return Ok(result.Result());
+            return Result.Result();
         }
+
 
         [HttpPost("add-friend")]
-        public IActionResult InviteFriend(int id)
+        public IActionResult InviteFriend([FromQuery]UserIDParamModel parameters)
         {
-            var result = new ResultContext();
-            var user = ClientHelper.GetUserFromHttpContext(HttpContext, _userService);
+            User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (_friendshipService.Send(user, id))
-                result.AddData($"Successfully sended friend request to user[{id}] from user[{user.UserID}].");
-            else result.AddExceptionMessage($"User[{user.UserID}] already has sended invite to user[{id}]" +
-                $" or the user doesn't exist.");
+            if (FriendshipService.SendRequest(CurrentUser, parameters.ID))
+            {
+                Result.AddData("Successfully sended friend request from user " + 
+                    $"[{CurrentUser.UserID}] to user [{parameters.ID}].");
+            }
+            else   
+            {
+                Result.AddException($"User[{CurrentUser.UserID}] already has sended invite " + 
+                    $"to user [{parameters.ID}] or the user doesn't exist.", 
+                    ExceptionCode.AlreadyInOrDoesNotExistArgument);
+            }
             
-            return Ok(result.Result());
+            return Result.Result();
         }
+
 
         [HttpPut("accept-friend")]
-        public IActionResult AcceptFriend(int id)
+        public IActionResult AcceptFriend([FromQuery]UserIDParamModel parameters)
         {
-            var result = new ResultContext();
-            var user = ClientHelper.GetUserFromHttpContext(HttpContext, _userService);
+            User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (_friendshipService.Accept(user, id))
-                result.AddData($"Successfully accepted user[{id}] for user[{user.UserID}].");
-            else result.AddExceptionMessage($"Failed to accepted user[{id}] for user[{user.UserID}].");
+            if (FriendshipService.AcceptRequest(CurrentUser, parameters.ID))
+            {
+                Result.AddData($"Successfully accepted user[{parameters.ID}] for user[{CurrentUser.UserID}].");
+            }   
+            else 
+            {
+                Result.AddException($"Failed to accepted user[{parameters.ID}] for user[{CurrentUser.UserID}].", 
+                    ExceptionCode.BadArgument);
+            }
             
-            return Ok(result.Result());
+            return Result.Result();
         }
+
 
         [HttpPut("decline-friend")]
-        public IActionResult DeclineFriend(int id)
+        public IActionResult DeclineFriend([FromQuery]UserIDParamModel parameters)
         {
-            var result = new ResultContext();
-            var user = ClientHelper.GetUserFromHttpContext(HttpContext, _userService);
+            User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (_friendshipService.Remove(user, id))
-                result.AddData($"Successfully declined user[{id}] for user[{user.UserID}].");
-            else result.AddExceptionMessage($"Failed to decline user[{id}] for user[{user.UserID}].");
+            if (FriendshipService.RemoveFriend(CurrentUser, parameters.ID))
+            {
+                Result.AddData($"Successfully declined user[{parameters.ID}] for user[{CurrentUser.UserID}].");
+            }
+            else
+            {
+                Result.AddException($"Failed to decline user[{parameters.ID}] for " + 
+                    $"user[{CurrentUser.UserID}].", ExceptionCode.BadArgument);
+            }
             
-            return Ok(result.Result());
+            return Result.Result();
         }
+
 
         [HttpDelete("remove-friend")]
-        public IActionResult RemoveFriend(int id)
+        public IActionResult RemoveFriend([FromQuery]UserIDParamModel parameters)
         {
-            var result = new ResultContext();
-            var user = ClientHelper.GetUserFromHttpContext(HttpContext, _userService);
+            User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (_friendshipService.Remove(user, id))
-                result.AddData($"Successfully removed user[{id}] for user[{user.UserID}].");
-            else result.AddExceptionMessage($"Failed to remove user[{id}] for user[{user.UserID}].");
+            if (FriendshipService.RemoveFriend(CurrentUser, parameters.ID))
+            {
+                Result.AddData($"Successfully removed user[{parameters.ID}] for user[{CurrentUser.UserID}].");
+            }
+            else
+            {
+                Result.AddException($"Failed to remove user[{parameters.ID}] " + 
+                    $"for user[{CurrentUser.UserID}].", ExceptionCode.BadArgument);
+            } 
             
-            return Ok(result.Result());
+            return Result.Result();
         }
 
-        [HttpGet("get-friends")]
-        public IActionResult GetFriends(int limit = 10)
-        {
-            var result = new ResultContext();
-            var user = ClientHelper.GetUserFromHttpContext(HttpContext, _userService);
 
-            result.AddData(_friendshipService.GetFriends(user, limit)
+        [HttpGet("get-friends")]
+        public IActionResult GetFriends([FromQuery]GetUserParamModel parameters)
+        {
+            User CurrentUser = (User)HttpContext.Items["User"];
+            
+            Result.AddData(FriendshipService.GetFriends(CurrentUser, parameters.Limit)
                 .Select(u => ModelConverter.FromUser(u))
             );
             
-            return Ok(result.Result());
+            return Result.Result();
         }
     }
 }

@@ -11,13 +11,12 @@ namespace MusicQuizAPI.Helpers
 {
     public static class SecurityHelper
     {
-        public static ResultContext RegisterUser(UserService userService, string authorizationHeader, string secretKey)
+        public static ResultContext RegisterUser(ResultContext result, UserService userService, 
+            string authorizationHeader, string secretKey)
         {
-            ResultContext result = new ResultContext();
-
             if (string.IsNullOrWhiteSpace(authorizationHeader))
             {
-                result.AddExceptionMessage("Authorization header is required!");
+                result.AddException("Authorization header is required!", ExceptionCode.MissingHeader);
             }
             else
             {
@@ -42,30 +41,31 @@ namespace MusicQuizAPI.Helpers
                         }
                         else
                         {
-                            result.AddExceptionMessage("Something went wrong with the registration.");
+                            result.AddException("Something went wrong with the registration.", 
+                                ExceptionCode.Unknown);
                         }
                     }
                     else
                     {
-                        result.AddExceptionMessage($"Username '{credentials[0]}' is already taken.");
+                        result.AddException($"Username '{credentials[0]}' is already taken.", 
+                            ExceptionCode.UserTaken);
                     }
                 }
                 catch (Exception)
                 {
-                    result.AddExceptionMessage("Bad payload!");
+                    result.AddException("Bad payload!", ExceptionCode.Unknown);
                 }
             }
 
             return result;
         }
 
-        public static ResultContext LoginUser(UserService userService, string authorizationHeader, string secretKey)
+        public static ResultContext LoginUser(ResultContext result, UserService userService, 
+            string authorizationHeader, string secretKey)
         {
-            ResultContext result = new ResultContext();
-
             if (string.IsNullOrWhiteSpace(authorizationHeader))
             {
-                result.AddExceptionMessage("Authorization header is required!");
+                result.AddException("Authorization header is required!", ExceptionCode.MissingHeader);
             }
             else
             {
@@ -90,17 +90,17 @@ namespace MusicQuizAPI.Helpers
                         }
                         else
                         {
-                            result.AddExceptionMessage("Wrong password!");
+                            result.AddException("Wrong password!", ExceptionCode.BadHeader);
                         }
                     }
                     else
                     {
-                        result.AddExceptionMessage("This user doesn't exist.");
+                        result.AddException("This user doesn't exist.", ExceptionCode.UnknownUser);
                     }
                 }
                 catch (Exception)
                 {
-                    result.AddExceptionMessage("Bad payload!");
+                    result.AddException("Bad payload!", ExceptionCode.Unknown);
                 }
             }
 

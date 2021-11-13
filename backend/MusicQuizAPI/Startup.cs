@@ -40,19 +40,6 @@ namespace MusicQuizAPI
                 opts.UseMySql(Configuration["ConnectionString"], ServerVersion.AutoDetect(Configuration["ConnectionString"]));
             });
             
-
-            // Using Json Web Token with Bearer Patern for Authentication
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options => 
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateAudience = false,
-                    ValidateIssuer = false,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
-                };
-            });
-
             // Adding CORS so that only specified origin can use the API
             services.AddCors(options =>
             {
@@ -110,6 +97,7 @@ namespace MusicQuizAPI
 
             // Using custom middleware
             app.UseMiddleware<ControllersCheckerMiddleware>();
+            app.UseMiddleware<JwtMiddleware>();
 
             // Using specified route patern
             app.UseMvc(builder =>

@@ -1,28 +1,30 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Net;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MusicQuizAPI.Models
 {
     [NotMapped]
     public class ResultContext<T>
     {
-        public int StatusCode { get; private set; } = 200;
+        public HttpStatusCode StatusCode { get; private set; } = HttpStatusCode.OK;
         public T Data { get; private set; }
-        private readonly List<string> _exceptionMessages;
+        public string Info { get; set; } = "";
+        private readonly List<ExceptionModel> _exceptions = new List<ExceptionModel>();
 
-        public ResultContext(T data) : this()
+
+        public ResultContext(T data)
         {
             Data = data;
         }
+        public ResultContext() { }
 
-        public ResultContext()
-        {
-            _exceptionMessages = new List<string>();
-        }
+        
 
-        public bool IsOk() => StatusCode == 200;
+        public bool IsOk() => StatusCode == HttpStatusCode.OK;
 
-        public bool AddData(T data)
+        public bool AddData(T data, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             if (Data == null) 
             {
@@ -32,42 +34,45 @@ namespace MusicQuizAPI.Models
             return false;
         }
 
-        public void AddExceptionMessage(string message)
+        public void AddException(string message, ExceptionCode exceptionCode, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
         {
-            _exceptionMessages.Add(message);
-            StatusCode = 400;
-        }
-
-        public bool AddServiceUnavailableMessage(string message)
-        {
-            if (StatusCode == 503 || StatusCode == 200)
+            StatusCode = statusCode;
+            _exceptions.Add(new ExceptionModel
             {
-                _exceptionMessages.Add(message);
-                StatusCode = 503;
-                return true;
-            }
-            return false;
+                Code = exceptionCode,
+                Message = message,
+            });
+            
         }
 
-        public object Result()
-        { 
+        public IActionResult Result()
+        {
+            object result;
+
+            if ((int)StatusCode < 400) result = new 
+            {
+                status = StatusCode,
+                result = Data
+            };
+            else result = new 
+            {
+                status = StatusCode,
+                result = _exceptions
+            };
+
             switch (StatusCode)
             {
-                case 200:
-                    return new {
-                        status = StatusCode,
-                        result = Data
-                    };
-                case 503:
-                    return new {
-                        status = StatusCode,
-                        result = _exceptionMessages[0]
-                    };
+                case HttpStatusCode.OK:
+                    return new OkObjectResult(result);
+                case HttpStatusCode.BadRequest:
+                    return new BadRequestObjectResult(result);
+                case HttpStatusCode.Created:
+                    return new CreatedResult(Info, result);
+                case HttpStatusCode.Unauthorized:
+                    return new UnauthorizedObjectResult(result);
+                // More to be added
                 default:
-                    return new {
-                        status = 400,
-                        errors = _exceptionMessages
-                    };
+                    return new StatusCodeResult((int)StatusCode);
             }
         }
 

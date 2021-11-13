@@ -23,55 +23,46 @@ namespace MusicQuizAPI.Services
             _friendshipRepository = friendshipRepository;
         }
 
-        public bool Send(User user, int id)
+        public bool SendRequest(User user, int id)
         {
-            if (id >= 0)
-            {
-                User potentialFriend = _userRepo.Get(id);
+            User potentialFriend = _userRepo.Get(id);
 
-                if (potentialFriend != null)
+            if (potentialFriend != null)
+            {
+                if (!_friendshipRepository.Exist(user.UserID, potentialFriend.UserID))
                 {
-                    if (!_friendshipRepository.Exist(user.UserID, potentialFriend.UserID))
+                    return _friendshipRepository.Add(new Friendship
                     {
-                        return _friendshipRepository.Add(new Friendship
-                        {
-                            RequestedUserID = user.UserID,
-                            AcceptedUserID = potentialFriend.UserID,
-                            StartDate = DateTime.Now
-                        }) > 0;
-                    }
+                        RequestedUserID = user.UserID,
+                        AcceptedUserID = potentialFriend.UserID,
+                        StartDate = DateTime.Now
+                    }) > 0;
                 }
             }
 
             return false;
         }
 
-        public bool Accept(User user, int id)
+        public bool AcceptRequest(User user, int id)
         {
-            if (id >= 0)
-            {
-                Friendship fs = _friendshipRepository.Get(user.UserID, id);
+            Friendship fs = _friendshipRepository.Get(user.UserID, id);
 
-                if (fs != null)
-                {
-                    fs.IsAccepted = true;
-                    return _friendshipRepository.Update(fs) > 0;
-                }
+            if (fs != null)
+            {
+                fs.IsAccepted = true;
+                return _friendshipRepository.Update(fs) > 0;
             }
 
             return false;
         }
 
-        public bool Remove(User user, int id)
+        public bool RemoveFriend(User user, int id)
         {
-            if (id >= 0)
-            {
-                Friendship fs = _friendshipRepository.Get(user.UserID, id);
+            Friendship fs = _friendshipRepository.Get(user.UserID, id);
 
-                if (fs != null)
-                {
-                    return _friendshipRepository.Remove(fs) > 0;
-                }
+            if (fs != null)
+            {
+                return _friendshipRepository.Remove(fs) > 0;
             }
 
             return false;

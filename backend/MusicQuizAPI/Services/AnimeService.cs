@@ -13,12 +13,10 @@ namespace MusicQuizAPI.Services
 {
     public class AnimeService
     {
-        private readonly ILogger<AnimeService> _logger;
         private readonly AnimeRepository _animeRepo;
 
         public AnimeService(ILogger<AnimeService> logger, AnimeRepository animeRepo)
         {
-            _logger = logger;
             _animeRepo = animeRepo;
         }
 
@@ -26,12 +24,12 @@ namespace MusicQuizAPI.Services
         {
             List<Anime> animes = new List<Anime>();
 
-            if (!string.IsNullOrWhiteSpace(title))
-            {
-                animes = _animeRepo.GetAllThatContainsTitle(title.ToLower()).ToList();
-            }
+            animes = _animeRepo.GetAll(title.ToLower()).ToList();
 
             return animes;
         }
+
+        public Anime GetAnime(int id)
+            => _animeRepo.Get(id);
     }
 }

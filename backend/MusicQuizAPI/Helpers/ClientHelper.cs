@@ -12,18 +12,5 @@ namespace MusicQuizAPI.Helpers
         {
             return context.Connection.RemoteIpAddress?.ToString();
         }
-
-        /// <summary>
-        /// Returns the User which ID is equal to the one set in the JWT Token payload
-        /// </summary>
-        public static User GetUserFromHttpContext(HttpContext context, UserService service)
-        {
-            string strId = context.User.Identity.GetClaim("id");
-            int id;
-
-            if (int.TryParse(strId, out id)) return service.GetByID(id);
-
-            return null;
-        }
     }
 }

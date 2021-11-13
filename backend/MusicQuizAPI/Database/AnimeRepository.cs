@@ -24,7 +24,7 @@ namespace MusicQuizAPI.Database
         
         public Anime Get(int id) => Db.Animes.FirstOrDefault(a => a.AnimeID == id);
 
-        public IQueryable<Anime> GetAllThatContainsTitle(string title) => 
+        public IQueryable<Anime> GetAll(string title) => 
             Db.Animes.Where(a => a.Title.ToLower().Contains(title));
 
         public int AddScore(int id, int score)

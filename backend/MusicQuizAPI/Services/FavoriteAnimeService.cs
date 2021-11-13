@@ -3,127 +3,97 @@ using Microsoft.Extensions.Logging;
 using MusicQuizAPI.Database;
 using MusicQuizAPI.Models.Database;
 using MusicQuizAPI.Models;
+using System.Net;
+using System.Collections.Generic;
 
 namespace MusicQuizAPI.Services
 {
     public class FavoriteAnimeService
     {
-        private readonly ILogger<AnimeService> _logger;
+        private readonly ILogger<FavoriteAnimeService> _logger;
         private readonly AnimeRepository _animeRepo;
         private readonly FavoriteAnimeRepository _favAnimeRepo;
-        private readonly int _animeCount;
 
-        public FavoriteAnimeService(ILogger<AnimeService> logger, AnimeRepository animeRepo,
+        public FavoriteAnimeService(ILogger<FavoriteAnimeService> logger, AnimeRepository animeRepo,
             FavoriteAnimeRepository favAnimeRepo)
         {
             _logger = logger;
             _animeRepo = animeRepo;
             _favAnimeRepo = favAnimeRepo;
-            _animeCount = _animeRepo.Count;
         }
 
-        public ResultContext AddFavoriteAnime(User user, int id, int score)
-        {
-            ResultContext result = new ResultContext();
+        public bool Exist(FavoriteAnime favoriteAnime)
+            => _favAnimeRepo.Exist(favoriteAnime);
 
-            if (id > 0 && id <= _animeCount && score > 0 && score <= 10)
+        public bool AddFavorite(FavoriteAnime favoriteAnime)
+        {
+            if (!Exist(favoriteAnime))
             {
-                if (!_favAnimeRepo.Exist(user.UserID, id))
+                if (_favAnimeRepo.Add(favoriteAnime) > 0)
                 {
-                    FavoriteAnime fa = new FavoriteAnime
-                    {
-                        UserID = user.UserID,
-                        AnimeID = id,
-                        Score = score
-                    };
+                    // Updates the average score of the anime
+                    _animeRepo.AddScore(favoriteAnime.AnimeID, favoriteAnime.Score);
 
-                    if (_favAnimeRepo.Add(fa) > 0)
-                    {
-                        // Updates the average score of the anime
-                        _animeRepo.AddScore(id, score);
-
-                        result.AddData($"The anime with id of [{id}] " +
-                        $"was added successfully to the user {user.Username}!");
-                    }   
-                    else result.AddExceptionMessage($"Something went wrong. " + 
-                        $"Cannot add anime with id of [{id}] in favorites for user {user.Username}!");
-                }
-                else result.AddExceptionMessage($"The anime with id of [{id}] " + 
-                    $"is already in favorites for user {user.Username} or doesn't exist!");
+                    return true;
+                }  
+                
+                // It shouldn't be getting here at any condition 
+                return false;
             }
-            else result.AddExceptionMessage($"'id' parameter is required and must be positive number!");
-
-            return result;
+            else return false;
         }
-    
-        public ResultContext RemoveFavoriteAnime(User user, int id)
-        {
-            ResultContext result = new ResultContext();
 
-            if (id > 0 && id <= _animeCount)
+        public bool RemoveFavorite(FavoriteAnime favoriteAnime)
+        {
+            FavoriteAnime favoriteAnimeToRemove = _favAnimeRepo.Get(favoriteAnime.UserID, favoriteAnime.AnimeID);
+
+            if (favoriteAnimeToRemove != null && favoriteAnimeToRemove != default(FavoriteAnime))
             {
-                FavoriteAnime fa = _favAnimeRepo.Get(user.UserID, id);
-
-                if (fa != null && fa != default(FavoriteAnime))
+                if (_favAnimeRepo.Remove(favoriteAnimeToRemove) > 0)
                 {
-                    if (_favAnimeRepo.Remove(fa) > 0)
-                    {
-                        // Updates the average score of the anime
-                        _animeRepo.RemoveScore(id, fa.Score);
+                    // Updates the average score of the anime
+                    _animeRepo.RemoveScore(favoriteAnimeToRemove.AnimeID, favoriteAnimeToRemove.Score);
 
-                        result.AddData($"The anime with id of [{id}] removed successfully from the user {user.Username}!");
-                    }   
-                    else result.AddExceptionMessage($"Something went wrong. " + 
-                        $"Cannot remove the anime with id of [{id}] from favorites for user {user.Username}!");
-                }
-                else result.AddExceptionMessage($"The anime with id of [{id}] is already " +
-                    $"not in favorites for user {user.Username}!");
+                    return true;
+                }   
+
+                // It shouldn't be getting here at any condition 
+                return false;
             }
-            else result.AddExceptionMessage($"'id' parameter is required and must be positive number!");
-
-            return result;
+            
+            return false;
         }
 
-        public ResultContext GetFavorites(User user)
+        public bool UpdateFavorite(FavoriteAnime favoriteAnime)
         {
-            ResultContext result = new ResultContext();
+            FavoriteAnime favoriteAnimeToUpdate = _favAnimeRepo.Get(favoriteAnime.UserID, favoriteAnime.AnimeID);
 
-            var favs = _favAnimeRepo.GetAllByUserID(user.UserID).ToList();
-
-            result.AddData(favs.Select(fa => ModelConverter.FromAnime(_animeRepo.Get(fa.AnimeID), fa.Score)));
-
-            return result;
-        }
-
-        public ResultContext UpdateFavoriteAnimeScore(User user, int id, int score)
-        {
-            ResultContext result = new ResultContext();
-
-            if (id > 0 && id <= _animeCount && score > 0 && score <= 10)
+            if (favoriteAnimeToUpdate != null && favoriteAnimeToUpdate != default(FavoriteAnime))
             {
-                FavoriteAnime fa = _favAnimeRepo.Get(user.UserID, id);
+                int previousScore = favoriteAnimeToUpdate.Score;
+                favoriteAnimeToUpdate.Score = favoriteAnime.Score;
 
-                if (fa != null && fa != default(FavoriteAnime))
+                if (_favAnimeRepo.Update(favoriteAnimeToUpdate) > 0)
                 {
-                    var previousScore = fa.Score;
-                    fa.Score = score;
+                    // Updates the average score of the anime
+                    _animeRepo.UpdateScore(favoriteAnimeToUpdate.AnimeID, 
+                        favoriteAnimeToUpdate.Score, previousScore);
 
-                    if (_favAnimeRepo.Update(fa) > 0)
-                    {
-                        _animeRepo.UpdateScore(fa.AnimeID, fa.Score, previousScore);
-
-                        result.AddData($"The anime with id of [{id}] updated successfully for the user {user.Username}!");
-                    }   
-                    else result.AddExceptionMessage($"Something went wrong. " + 
-                        $"Cannot update the anime with id of [{id}] from favorites for user {user.Username}!");
-                }
-                else result.AddExceptionMessage($"The anime with id of [{id}] doesn't " +
-                    $"exist in favorites for user {user.Username}!");
+                    return true;
+                }   
+                
+                // It shouldn't be getting here at any condition 
+                return false;
             }
-            else result.AddExceptionMessage($"'id' parameter must be positive number and " + 
-                $"'score' must be between 1 and 10!");
+            
+            return false;
+        }
 
-            return result;
+        public List<FavoriteAnime> GetFavorites(User user)
+        {
+            List<FavoriteAnime> favs = _favAnimeRepo.GetAllByUserID(user.UserID).ToList();
+
+            return favs;
         }
     }
 }

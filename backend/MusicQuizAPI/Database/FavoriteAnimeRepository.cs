@@ -13,8 +13,9 @@ namespace MusicQuizAPI.Database
             Db = db;
         }
 
-        public bool Exist(int userId, int animeId) => 
-            Db.FavoriteAnimes.Any(fa => fa.UserID == userId && fa.AnimeID == animeId);
+        public bool Exist(FavoriteAnime fa) 
+            => Db.FavoriteAnimes.Any(a 
+                => a.UserID == fa.UserID && a.AnimeID == fa.AnimeID);
         
         public int Add(FavoriteAnime fa)
         {
@@ -44,13 +45,14 @@ namespace MusicQuizAPI.Database
         public IQueryable<FavoriteAnime> GetAllByUserID(int id) =>
             Db.FavoriteAnimes.Where(fa => fa.UserID == id);
 
-        public void IncrementAnimePopularity(int id)
+
+        private void IncrementAnimePopularity(int id)
         {
             Db.Animes.First(a => a.AnimeID == id).Popularity++;
             Db.SaveChanges();
         }
 
-        public void DecrementAnimePopularity(int id)
+        private void DecrementAnimePopularity(int id)
         {
             Db.Animes.First(a => a.AnimeID == id).Popularity--;
             Db.SaveChanges();

@@ -75,5 +75,8 @@ namespace MusicQuizAPI.Services
 
             return songs;
         }
+
+        public Song GetSong(int id)
+            => _songRepo.Get(id);
     }
 }
