@@ -1,5 +1,6 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
@@ -37,7 +38,7 @@ namespace MusicQuizAPI.Helpers
                             result.AddData(new 
                             {
                                 token = token
-                            });
+                            }, HttpStatusCode.Created);
                         }
                         else
                         {

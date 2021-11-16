@@ -13,14 +13,14 @@ namespace MusicQuizAPI.Services
     {
         private readonly ILogger<UserService> _logger;
         private readonly UserRepository _userRepo;
-        private readonly FriendshipRepository _friendshipRepository;
+        private readonly FriendshipService _friendshipService;
 
         public UserService(ILogger<UserService> logger, UserRepository userRepo,
-            FriendshipRepository friendshipRepository)
+            FriendshipService friendshipService)
         {
             _logger = logger;
             _userRepo = userRepo;
-            _friendshipRepository = friendshipRepository;
+            _friendshipService= friendshipService;
         }
 
         public bool RegisterUser(string username, string password)
@@ -66,10 +66,11 @@ namespace MusicQuizAPI.Services
 
             if (!string.IsNullOrWhiteSpace(name))
             {
-                var friends = _friendshipRepository.GetFriends(user.UserID);
+                var friends = _friendshipService.GetFriends(user);
 
                 users = _userRepo.GetAllThatContainsName(name.ToLower())
-                    .Take(limit).ToList();
+                    .Take(limit)
+                    .ToList();
 
                 users.ForEach(u => u.IsFriend = friends.Contains(u));
             }

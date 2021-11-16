@@ -68,10 +68,15 @@ namespace MusicQuizAPI.Services
             return false;
         }
 
-        public List<User> GetFriends(User user, int limit)
-            => _friendshipRepository.GetFriends(user.UserID)
-                .Take(limit)
+        public List<User> GetFriends(User user)
+        {
+            int id = user.UserID;
+
+            return _friendshipRepository.GetAll()
+                .Where(f => (f.RequestedUserID == id || f.AcceptedUserID == id) && f.IsAccepted)
+                .Select(f => f.AcceptedUserID == id ? _userRepo.Get(f.RequestedUserID) : _userRepo.Get(f.AcceptedUserID))
                 .Select(u => {u.IsFriend = true; return u; })
                 .ToList();
+        }
     }
 }

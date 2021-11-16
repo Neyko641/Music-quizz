@@ -105,5 +105,13 @@ namespace MusicQuizAPI.Services
 
             return favs;
         }
+
+        public int GetFavoriteScore(int userId, int animeId) 
+        {
+            FavoriteSong fs = _favSongRepo.Get(userId, animeId);
+
+            if (fs != null) return fs.Score;
+            else return 0;
+        }
     }
 }

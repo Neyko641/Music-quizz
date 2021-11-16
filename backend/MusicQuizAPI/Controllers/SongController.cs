@@ -13,6 +13,8 @@ using MusicQuizAPI.Extensions;
 using MusicQuizAPI.Models.Parameters;
 using MusicQuizAPI.Models.Database;
 using System.Net;
+using AutoMapper;
+using MusicQuizAPI.Models.Dtos;
 
 namespace MusicQuizAPI.Controllers
 {
@@ -22,51 +24,70 @@ namespace MusicQuizAPI.Controllers
     [Route("api/song")]
     public class SongController : ControllerBase
     {
-        SongService SongService  { get; set; }
-        UserService UserService  { get; set; }
-        FavoriteSongService FavoriteSongService  { get; set; }
-        ILogger<SongController> Logger  { get; set; }
+        SongService SongService { get; set; }
+        UserService UserService { get; set; }
+        FavoriteSongService FavoriteSongService { get; set; }
+        ILogger<SongController> Logger { get; set; }
         ResultContext Result { get; set; }
+        IMapper Mapper { get; set; }
 
-        public SongController(ILogger<SongController> logger, SongService songService, 
-            UserService userService, FavoriteSongService favoriteSongService)
+        public SongController(ILogger<SongController> logger, SongService songService,
+            UserService userService, FavoriteSongService favoriteSongService,
+            IMapper mapper)
         {
             Logger = logger;
             SongService = songService;
             UserService = userService;
             FavoriteSongService = favoriteSongService;
             Result = new ResultContext();
+            Mapper = mapper;
         }
 
 
         [HttpGet("random")]
-        public IActionResult Random([FromQuery]RandomSongParamModel parameters) 
+        public IActionResult Random([FromQuery] RandomSongParamModel parameters)
         {
+            User CurrentUser = (User)HttpContext.Items["User"];
+
             List<Song> songs = SongService.GetRandomSongs(parameters.Count, parameters.Difficulty);
 
-            Result.AddData(songs.Select(s => ModelConverter.FromSong(s))); 
-            
+            Result.AddData(songs.Select(s => 
+            {
+                var song = Mapper.Map<SongReadDto>(s);
+                song.UserScore = FavoriteSongService.GetFavoriteScore(CurrentUser.UserID, s.SongID);
+                return song;
+
+            }));
+
             return Result.Result();
         }
 
 
         [HttpGet("search")]
-        public IActionResult Search([FromQuery]SearchSongParamModel parameters)
+        public IActionResult Search([FromQuery] SearchSongParamModel parameters)
         {
+            User CurrentUser = (User)HttpContext.Items["User"];
+
             List<Song> songs = SongService.SearchSong(parameters.Title, parameters.SearchType);
 
-            Result.AddData(songs.Select(s => ModelConverter.FromSong(s)));
-            
+            Result.AddData(songs.Select(s => 
+            {
+                var song = Mapper.Map<SongReadDto>(s);
+                song.UserScore = FavoriteSongService.GetFavoriteScore(CurrentUser.UserID, s.AnimeID);
+                return song;
+
+            }));
+
             return Result.Result();
         }
 
 
         [HttpPost("add-favorite")]
-        public IActionResult AddToFavorites([FromQuery]AddFavoriteParamModel parameters) 
+        public IActionResult AddToFavorites([FromQuery] AddFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null) 
+            if (CurrentUser != null)
             {
                 FavoriteSong newFavoriteSong = new FavoriteSong
                 {
@@ -83,14 +104,14 @@ namespace MusicQuizAPI.Controllers
                 }
                 else
                 {
-                    Result.AddException($"The song [{newFavoriteSong.SongID}] " + 
+                    Result.AddException($"The song [{newFavoriteSong.SongID}] " +
                         $"is already in favorites for user [{newFavoriteSong.UserID}] or doesn't exist!",
                         ExceptionCode.AlreadyInOrDoesNotExistArgument);
-                    }
+                }
             }
             else
             {
-                Result.AddException("Unauthorized user!", 
+                Result.AddException("Unauthorized user!",
                     ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
             }
 
@@ -99,11 +120,11 @@ namespace MusicQuizAPI.Controllers
 
 
         [HttpDelete("remove-favorite")]
-        public IActionResult RemoveFromFavorites([FromQuery]RemoveFavoriteParamModel parameters) 
+        public IActionResult RemoveFromFavorites([FromQuery] RemoveFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null) 
+            if (CurrentUser != null)
             {
                 FavoriteSong favoriteSong = new FavoriteSong
                 {
@@ -113,7 +134,7 @@ namespace MusicQuizAPI.Controllers
 
                 if (FavoriteSongService.RemoveFavorite(favoriteSong))
                 {
-                    Result.AddData($"The song [{favoriteSong.SongID}] was removed successfully " + 
+                    Result.AddData($"The song [{favoriteSong.SongID}] was removed successfully " +
                         $"from the user [{favoriteSong.UserID}]!");
                 }
                 else
@@ -125,7 +146,7 @@ namespace MusicQuizAPI.Controllers
             }
             else
             {
-                Result.AddException("Unauthorized user!", 
+                Result.AddException("Unauthorized user!",
                     ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
             }
 
@@ -134,11 +155,11 @@ namespace MusicQuizAPI.Controllers
 
 
         [HttpPatch("update-favorite")]
-        public IActionResult UpdateFavorite([FromQuery]UpdateFavoriteParamModel parameters) 
+        public IActionResult UpdateFavorite([FromQuery] UpdateFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null) 
+            if (CurrentUser != null)
             {
                 FavoriteSong favoriteSong = new FavoriteSong
                 {
@@ -149,7 +170,7 @@ namespace MusicQuizAPI.Controllers
 
                 if (FavoriteSongService.UpdateFavorite(favoriteSong))
                 {
-                    Result.AddData($"The song [{favoriteSong.SongID}] updated successfully " + 
+                    Result.AddData($"The song [{favoriteSong.SongID}] updated successfully " +
                         $"for the user [{favoriteSong.UserID}]!");
                 }
                 else
@@ -161,7 +182,7 @@ namespace MusicQuizAPI.Controllers
             }
             else
             {
-                Result.AddException("Unauthorized user!", 
+                Result.AddException("Unauthorized user!",
                     ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
             }
 
@@ -170,19 +191,24 @@ namespace MusicQuizAPI.Controllers
 
 
         [HttpGet("get-favorites")]
-        public IActionResult GetFavorites() 
+        public IActionResult GetFavorites()
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null) 
+            if (CurrentUser != null)
             {
                 List<FavoriteSong> favorites = FavoriteSongService.GetFavorites(CurrentUser);
-                Result.AddData(favorites.Select(fs 
-                    => ModelConverter.FromSong(fs.Song, fs.Score)));        
+
+                Result.AddData(favorites.Select(fs =>
+                {
+                    var song = Mapper.Map<SongReadDto>(SongService.GetSong(fs.SongID));
+                    song.UserScore = fs.Score;
+                    return song;
+                }));
             }
             else
             {
-                Result.AddException("Unauthorized user!", 
+                Result.AddException("Unauthorized user!",
                     ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
             }
 

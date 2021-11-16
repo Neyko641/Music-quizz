@@ -18,7 +18,7 @@ using MusicQuizAPI.Services;
 using MusicQuizAPI.Middleware;
 using MusicQuizAPI.Filters;
 using MusicQuizAPI.Database;
-
+using AutoMapper;
 
 namespace MusicQuizAPI
 {
@@ -54,6 +54,9 @@ namespace MusicQuizAPI
             {
                 config.Filters.Add(new LogFilter());
             });
+
+            // Adding AutoMapper to help transform one model to another
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             // Adding DI services
             services.AddSingleton<IConfiguration>(Configuration);

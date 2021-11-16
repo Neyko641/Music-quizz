@@ -89,11 +89,15 @@ namespace MusicQuizAPI.Services
             return false;
         }
 
-        public List<FavoriteAnime> GetFavorites(User user)
-        {
-            List<FavoriteAnime> favs = _favAnimeRepo.GetAllByUserID(user.UserID).ToList();
+        public List<FavoriteAnime> GetFavorites(int userId)
+            => _favAnimeRepo.GetAllByUserID(userId).ToList();
 
-            return favs;
+        public int GetFavoriteScore(int userId, int animeId) 
+        {
+            FavoriteAnime fa =_favAnimeRepo.Get(userId, animeId);
+
+            if (fa != null) return fa.Score;
+            else return 0;
         }
     }
 }

@@ -28,6 +28,7 @@ namespace MusicQuizAPI.Models
         {
             if (Data == null) 
             {
+                StatusCode = statusCode;
                 Data = data;
                 return true;
             }
@@ -57,7 +58,7 @@ namespace MusicQuizAPI.Models
             else result = new 
             {
                 status = StatusCode,
-                result = _exceptions
+                errors = _exceptions
             };
 
             switch (StatusCode)
@@ -70,6 +71,8 @@ namespace MusicQuizAPI.Models
                     return new CreatedResult(Info, result);
                 case HttpStatusCode.Unauthorized:
                     return new UnauthorizedObjectResult(result);
+                case HttpStatusCode.NotFound:
+                    return new NotFoundObjectResult(result);
                 // More to be added
                 default:
                     return new StatusCodeResult((int)StatusCode);

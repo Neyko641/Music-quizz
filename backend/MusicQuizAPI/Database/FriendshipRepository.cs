@@ -39,10 +39,8 @@ namespace MusicQuizAPI.Database
             => Db.Friendships.FirstOrDefault(fs => (fs.RequestedUserID == user1Id && fs.AcceptedUserID == user2Id) ||
                 (fs.RequestedUserID == user2Id && fs.AcceptedUserID == user1Id));
 
-        public List<User> GetFriends(int id)
-            => Db.Friendships.Where(fs => (fs.RequestedUserID == id || fs.AcceptedUserID == id) && fs.IsAccepted)
-                .Select(fs => Db.Users.First(u => u.UserID == fs.AcceptedUserID || u.UserID == fs.RequestedUserID))
-                .ToList();
+        public List<Friendship> GetAll()
+            => Db.Friendships.ToList();
 
         
     }

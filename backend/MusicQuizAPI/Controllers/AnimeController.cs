@@ -13,6 +13,8 @@ using MusicQuizAPI.Models.API;
 using Microsoft.AspNetCore.Authorization;
 using System.Net;
 using MusicQuizAPI.Models.Database;
+using AutoMapper;
+using MusicQuizAPI.Models.Dtos;
 
 namespace MusicQuizAPI.Controllers
 {
@@ -26,31 +28,42 @@ namespace MusicQuizAPI.Controllers
         UserService UserService { get; set; }
         FavoriteAnimeService FavoriteAnimeService { get; set; }
         ResultContext Result { get; set; }
+        IMapper Mapper { get; set; }
 
         public AnimeController(AnimeService animeService, UserService userService,
-            FavoriteAnimeService favoriteAnimeService)
+            FavoriteAnimeService favoriteAnimeService, IMapper mapper)
         {
             AnimeService = animeService;
             UserService = userService;
             FavoriteAnimeService = favoriteAnimeService;
             Result = new ResultContext();
+            Mapper = mapper;
         }
 
         [HttpGet("search")]
-        public IActionResult Search(string title) 
+        public IActionResult Search([FromQuery] SearchAnimeParamModel parameters)
         {
-            List<Anime> foundedAnimes = AnimeService.SearchAnime(title);
-            Result.AddData(foundedAnimes);
+            User CurrentUser = (User)HttpContext.Items["User"];
+
+            List<Anime> foundedAnimes = AnimeService.SearchAnime(parameters.Title);
             
+            Result.AddData(foundedAnimes.Select(a => 
+            {
+                var anime = Mapper.Map<AnimeReadDto>(a);
+                anime.UserScore = FavoriteAnimeService.GetFavoriteScore(CurrentUser.UserID, a.AnimeID);
+                return anime;
+
+            }));
+
             return Result.Result();
         }
 
         [HttpPost("add-favorite")]
-        public IActionResult AddToFavorites([FromQuery]AddFavoriteParamModel parameters) 
+        public IActionResult AddToFavorites([FromQuery] AddFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null) 
+            if (CurrentUser != null)
             {
                 FavoriteAnime newFavoriteAnime = new FavoriteAnime
                 {
@@ -67,14 +80,14 @@ namespace MusicQuizAPI.Controllers
                 }
                 else
                 {
-                    Result.AddException($"The anime [{newFavoriteAnime.AnimeID}] " + 
+                    Result.AddException($"The anime [{newFavoriteAnime.AnimeID}] " +
                         $"is already in favorites for user [{newFavoriteAnime.UserID}] or doesn't exist!",
                         ExceptionCode.AlreadyInOrDoesNotExistArgument);
-                    }
+                }
             }
             else
             {
-                Result.AddException("Unauthorized user!", 
+                Result.AddException("Unauthorized user!",
                     ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
             }
 
@@ -83,11 +96,11 @@ namespace MusicQuizAPI.Controllers
 
 
         [HttpDelete("remove-favorite")]
-        public IActionResult RemoveFromFavorites([FromQuery]RemoveFavoriteParamModel parameters) 
+        public IActionResult RemoveFromFavorites([FromQuery] RemoveFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null) 
+            if (CurrentUser != null)
             {
                 FavoriteAnime favoriteAnime = new FavoriteAnime
                 {
@@ -97,7 +110,7 @@ namespace MusicQuizAPI.Controllers
 
                 if (FavoriteAnimeService.RemoveFavorite(favoriteAnime))
                 {
-                    Result.AddData($"The anime [{favoriteAnime.AnimeID}] was removed successfully " + 
+                    Result.AddData($"The anime [{favoriteAnime.AnimeID}] was removed successfully " +
                         $"from the user [{favoriteAnime.UserID}]!");
                 }
                 else
@@ -109,19 +122,20 @@ namespace MusicQuizAPI.Controllers
             }
             else
             {
-                Result.AddException("Unauthorized user!", 
+                Result.AddException("Unauthorized user!",
                     ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
             }
 
             return Result.Result();
         }
 
+
         [HttpPatch("update-favorite")]
-        public IActionResult UpdateFavorite([FromQuery]UpdateFavoriteParamModel parameters) 
+        public IActionResult UpdateFavorite([FromQuery] UpdateFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null) 
+            if (CurrentUser != null)
             {
                 FavoriteAnime favoriteAnime = new FavoriteAnime
                 {
@@ -132,7 +146,7 @@ namespace MusicQuizAPI.Controllers
 
                 if (FavoriteAnimeService.UpdateFavorite(favoriteAnime))
                 {
-                    Result.AddData($"The anime [{favoriteAnime.AnimeID}] updated successfully " + 
+                    Result.AddData($"The anime [{favoriteAnime.AnimeID}] updated successfully " +
                         $"for the user [{favoriteAnime.UserID}]!");
                 }
                 else
@@ -144,27 +158,34 @@ namespace MusicQuizAPI.Controllers
             }
             else
             {
-                Result.AddException("Unauthorized user!", 
+                Result.AddException("Unauthorized user!",
                     ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
             }
 
             return Result.Result();
         }
 
+
         [HttpGet("get-favorites")]
-        public IActionResult GetFavorites() 
+        public IActionResult GetFavorites()
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null) 
+            if (CurrentUser != null)
             {
-                List<FavoriteAnime> favorites = FavoriteAnimeService.GetFavorites(CurrentUser);
-                Result.AddData(favorites.Select(fa 
-                    => ModelConverter.FromAnime(AnimeService.GetAnime(fa.AnimeID), fa.Score)));
+                List<FavoriteAnime> favorites = FavoriteAnimeService.GetFavorites(CurrentUser.UserID);
+
+                // Converts FavoriteAnime to Anime object and sets the user score
+                Result.AddData(favorites.Select(fa => 
+                {
+                    var anime = Mapper.Map<AnimeReadDto>(AnimeService.GetAnime(fa.AnimeID));
+                    anime.UserScore = fa.Score;
+                    return anime;
+                }));
             }
             else
             {
-                Result.AddException("Unauthorized user!", 
+                Result.AddException("Unauthorized user!",
                     ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
             }
 
