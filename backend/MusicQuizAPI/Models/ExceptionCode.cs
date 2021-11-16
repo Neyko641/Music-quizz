@@ -8,16 +8,16 @@ namespace MusicQuizAPI.Models
         Unavailable,
 
         // Arguments
-        MissingArgument,
+        MissingArgument = 10,
         BadArgument,
         AlreadyInOrDoesNotExistArgument,
 
         // Headers
-        MissingHeader,
+        MissingHeader = 20,
         BadHeader,
 
-        // User
-        UnknownUser,
+        // Users
+        UnknownUser = 30,
         UserTaken
     }
 }
