@@ -12,7 +12,13 @@ namespace MusicQuizAPI.Database
             Db = db;
         }
 
-        public bool Exist(string title) => Db.Animes.Any(a => a.Title == title);
+        public bool Exist(string title) 
+            => Db.Animes.Any(a => a.Title == title);
+
+
+        public bool Exist(int id) 
+            => Db.Animes.Any(a => a.AnimeID == id);
+
 
         public int Add(Anime anime)
         { 
@@ -20,12 +26,18 @@ namespace MusicQuizAPI.Database
             return Db.SaveChanges();
         }
 
-        public Anime Get(string title) => Db.Animes.FirstOrDefault(a => a.Title == title);
-        
-        public Anime Get(int id) => Db.Animes.FirstOrDefault(a => a.AnimeID == id);
 
-        public IQueryable<Anime> GetAll(string title) => 
-            Db.Animes.Where(a => a.Title.ToLower().Contains(title));
+        public Anime Get(string title) 
+            => Db.Animes.FirstOrDefault(a => a.Title == title);
+        
+
+        public Anime Get(int id) 
+            => Db.Animes.FirstOrDefault(a => a.AnimeID == id);
+
+
+        public IQueryable<Anime> GetAll(string title) 
+            => Db.Animes.Where(a => a.Title.ToLower().Contains(title));
+
 
         public int AddScore(int id, int score)
         {
@@ -34,6 +46,7 @@ namespace MusicQuizAPI.Database
             anime.Score /= anime.Popularity == 1 ? 1 : 2;
             return Db.SaveChanges();
         }
+
 
         public int RemoveScore(int id, int score)
         {
@@ -46,6 +59,7 @@ namespace MusicQuizAPI.Database
             
             return Db.SaveChanges();
         }
+
 
         public int UpdateScore(int id, int newScore, int previousScore)
         {  
@@ -63,6 +77,7 @@ namespace MusicQuizAPI.Database
 
             return Db.SaveChanges();
         }
+
 
         public int Count => Db.Animes.Count();
     }

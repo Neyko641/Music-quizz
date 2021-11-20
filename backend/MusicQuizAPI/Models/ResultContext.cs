@@ -1,28 +1,24 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Net;
-using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace MusicQuizAPI.Models
 {
     [NotMapped]
-    public class ResultContext<T>
+    public class ResponseContext<T>
     {
-        public HttpStatusCode StatusCode { get; private set; } = HttpStatusCode.OK;
         public T Data { get; private set; }
-        public string Info { get; set; } = "";
-        private readonly List<ExceptionModel> _exceptions = new List<ExceptionModel>();
+        public HttpStatusCode StatusCode { get; private set; }
 
 
-        public ResultContext(T data)
+        public ResponseContext(T data)
         {
             Data = data;
         }
-        public ResultContext() { }
+        public ResponseContext() { }
 
         
-
-        public bool IsOk() => StatusCode == HttpStatusCode.OK;
 
         public bool AddData(T data, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
@@ -35,51 +31,13 @@ namespace MusicQuizAPI.Models
             return false;
         }
 
-        public void AddException(string message, ExceptionCode exceptionCode, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
+        public object Body => new 
         {
-            StatusCode = statusCode;
-            _exceptions.Add(new ExceptionModel
-            {
-                Code = exceptionCode,
-                Message = message,
-            });
-            
-        }
-
-        public IActionResult Result()
-        {
-            object result;
-
-            if ((int)StatusCode < 400) result = new 
-            {
-                status = StatusCode,
-                result = Data
-            };
-            else result = new 
-            {
-                status = StatusCode,
-                errors = _exceptions
-            };
-
-            switch (StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return new OkObjectResult(result);
-                case HttpStatusCode.BadRequest:
-                    return new BadRequestObjectResult(result);
-                case HttpStatusCode.Created:
-                    return new CreatedResult(Info, result);
-                case HttpStatusCode.Unauthorized:
-                    return new UnauthorizedObjectResult(result);
-                case HttpStatusCode.NotFound:
-                    return new NotFoundObjectResult(result);
-                // More to be added
-                default:
-                    return new StatusCodeResult((int)StatusCode);
-            }
-        }
+            status = StatusCode,
+            result = Data
+        };
 
     }
 
-    public class ResultContext : ResultContext<object> {}
+    public class ResponseContext : ResponseContext<object> {}
 }

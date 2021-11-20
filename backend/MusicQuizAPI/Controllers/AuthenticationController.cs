@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
+using MusicQuizAPI.Models.Parameters;
 using Microsoft.Extensions.Logging;
 using MusicQuizAPI.Helpers;
 
@@ -20,7 +21,7 @@ namespace MusicQuizAPI.Controllers
         IConfiguration Configuration { get; set; }
         UserService UserService { get; set; }
         ILogger<AuthenticationController> Logger { get; set; }
-        ResultContext Result { get; set; }
+        ResponseContext ResponseContext { get; set; }
 
         public AuthenticationController(ILogger<AuthenticationController> logger, 
             IConfiguration configuration, UserService userService)
@@ -28,7 +29,7 @@ namespace MusicQuizAPI.Controllers
             Logger = logger;
             Configuration = configuration;
             UserService = userService;
-            Result = new ResultContext();
+            ResponseContext = new ResponseContext();
         }
 
         /*
@@ -38,25 +39,21 @@ namespace MusicQuizAPI.Controllers
             
 
         [HttpPost("register")]
-        public IActionResult Register()
+        public IActionResult Register([FromHeader] AuthorizationParamModel parameters)
         {
-            string authorizationHeader = Request.Headers["Authorization"].FirstOrDefault();
-            string secret = Configuration["JWT:Secret"];
+            SecurityHelper.RegisterUser(ResponseContext, UserService, parameters.Authorization, 
+                Configuration["JWT:Secret"]);
             
-            SecurityHelper.RegisterUser(Result, UserService, authorizationHeader, secret);
-            
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
 
         [HttpPost("login")]
-        public IActionResult Login()
+        public IActionResult Login([FromHeader] AuthorizationParamModel parameters)
         {
-            string authorizationHeader = Request.Headers["Authorization"].FirstOrDefault();
-            string secret = Configuration["JWT:Secret"];
+            SecurityHelper.LoginUser(ResponseContext, UserService, parameters.Authorization, 
+                Configuration["JWT:Secret"]);
             
-            SecurityHelper.LoginUser(Result, UserService, authorizationHeader, secret);
-            
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
     }
 

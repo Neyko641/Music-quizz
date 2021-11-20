@@ -24,12 +24,16 @@ namespace MusicQuizAPI.Controllers
     [Route("api/song")]
     public class SongController : ControllerBase
     {
+        #region Properties
         SongService SongService { get; set; }
         UserService UserService { get; set; }
         FavoriteSongService FavoriteSongService { get; set; }
         ILogger<SongController> Logger { get; set; }
-        ResultContext Result { get; set; }
+        ResponseContext ResponseContext { get; set; }
         IMapper Mapper { get; set; }
+        #endregion
+
+        
 
         public SongController(ILogger<SongController> logger, SongService songService,
             UserService userService, FavoriteSongService favoriteSongService,
@@ -39,19 +43,21 @@ namespace MusicQuizAPI.Controllers
             SongService = songService;
             UserService = userService;
             FavoriteSongService = favoriteSongService;
-            Result = new ResultContext();
+            ResponseContext = new ResponseContext();
             Mapper = mapper;
         }
 
 
+
+        #region Methods
         [HttpGet("random")]
-        public IActionResult Random([FromQuery] RandomSongParamModel parameters)
+        public IActionResult GetRandomSongs([FromQuery] RandomSongParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
             List<Song> songs = SongService.GetRandomSongs(parameters.Count, parameters.Difficulty);
 
-            Result.AddData(songs.Select(s => 
+            ResponseContext.AddData(songs.Select(s => 
             {
                 var song = Mapper.Map<SongReadDto>(s);
                 song.UserScore = FavoriteSongService.GetFavoriteScore(CurrentUser.UserID, s.SongID);
@@ -59,18 +65,18 @@ namespace MusicQuizAPI.Controllers
 
             }));
 
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
 
 
-        [HttpGet("search")]
-        public IActionResult Search([FromQuery] SearchSongParamModel parameters)
+        [HttpGet]
+        public IActionResult SearchSongs([FromQuery] SearchSongParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
             List<Song> songs = SongService.SearchSong(parameters.Title, parameters.SearchType);
 
-            Result.AddData(songs.Select(s => 
+            ResponseContext.AddData(songs.Select(s => 
             {
                 var song = Mapper.Map<SongReadDto>(s);
                 song.UserScore = FavoriteSongService.GetFavoriteScore(CurrentUser.UserID, s.AnimeID);
@@ -78,141 +84,88 @@ namespace MusicQuizAPI.Controllers
 
             }));
 
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
 
 
-        [HttpPost("add-favorite")]
-        public IActionResult AddToFavorites([FromQuery] AddFavoriteParamModel parameters)
+        [HttpPost("favorites")]
+        public IActionResult AddFavoriteSong([FromBody] AddFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null)
+            FavoriteSong newFavoriteSong = new FavoriteSong
             {
-                FavoriteSong newFavoriteSong = new FavoriteSong
-                {
-                    UserID = CurrentUser.UserID,
-                    SongID = parameters.ID,
-                    Score = parameters.Score
-                };
+                UserID = CurrentUser.UserID,
+                SongID = parameters.ID,
+                Score = parameters.Score
+            };
 
-                if (FavoriteSongService.AddFavorite(newFavoriteSong))
-                {
-                    Result.AddData($"The song [{newFavoriteSong.SongID}] " +
-                        $"was added successfully to the user [{newFavoriteSong.UserID}]!",
-                        HttpStatusCode.Created);
-                }
-                else
-                {
-                    Result.AddException($"The song [{newFavoriteSong.SongID}] " +
-                        $"is already in favorites for user [{newFavoriteSong.UserID}] or doesn't exist!",
-                        ExceptionCode.AlreadyInOrDoesNotExistArgument);
-                }
-            }
-            else
-            {
-                Result.AddException("Unauthorized user!",
-                    ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
-            }
+            FavoriteSongService.AddFavorite(newFavoriteSong);
+            
+            ResponseContext.AddData($"The song [{newFavoriteSong.SongID}] " +
+                $"was added successfully to the user [{newFavoriteSong.UserID}]!");
 
-            return Result.Result();
+            return Created("", ResponseContext.Body);
         }
 
 
-        [HttpDelete("remove-favorite")]
-        public IActionResult RemoveFromFavorites([FromQuery] RemoveFavoriteParamModel parameters)
+        [HttpDelete("favorites")]
+        public IActionResult RemoveFavoriteSong([FromBody] RemoveFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null)
+            FavoriteSong favoriteSong = new FavoriteSong
             {
-                FavoriteSong favoriteSong = new FavoriteSong
-                {
-                    UserID = CurrentUser.UserID,
-                    SongID = parameters.ID
-                };
+                UserID = CurrentUser.UserID,
+                SongID = parameters.ID
+            };
 
-                if (FavoriteSongService.RemoveFavorite(favoriteSong))
-                {
-                    Result.AddData($"The song [{favoriteSong.SongID}] was removed successfully " +
-                        $"from the user [{favoriteSong.UserID}]!");
-                }
-                else
-                {
-                    Result.AddException($"The song [{favoriteSong.SongID}] is already " +
-                        $"not in favorites for user {favoriteSong.UserID}!",
-                        ExceptionCode.AlreadyInOrDoesNotExistArgument);
-                }
-            }
-            else
-            {
-                Result.AddException("Unauthorized user!",
-                    ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
-            }
+            FavoriteSongService.RemoveFavorite(favoriteSong);
+            
+            ResponseContext.AddData($"The song [{favoriteSong.SongID}] was removed successfully " +
+                $"from the user [{favoriteSong.UserID}]!");
 
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
 
 
-        [HttpPatch("update-favorite")]
-        public IActionResult UpdateFavorite([FromQuery] UpdateFavoriteParamModel parameters)
+        [HttpPatch("favorites")]
+        public IActionResult UpdateFavoriteSong([FromBody] UpdateFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null)
+            FavoriteSong favoriteSong = new FavoriteSong
             {
-                FavoriteSong favoriteSong = new FavoriteSong
-                {
-                    UserID = CurrentUser.UserID,
-                    SongID = parameters.ID,
-                    Score = parameters.Score
-                };
+                UserID = CurrentUser.UserID,
+                SongID = parameters.ID,
+                Score = parameters.Score
+            };
 
-                if (FavoriteSongService.UpdateFavorite(favoriteSong))
-                {
-                    Result.AddData($"The song [{favoriteSong.SongID}] updated successfully " +
-                        $"for the user [{favoriteSong.UserID}]!");
-                }
-                else
-                {
-                    Result.AddException($"The song [{favoriteSong.SongID}] doesn't " +
-                        $"exist in favorites for user [{favoriteSong.UserID}]!",
-                        ExceptionCode.AlreadyInOrDoesNotExistArgument);
-                }
-            }
-            else
-            {
-                Result.AddException("Unauthorized user!",
-                    ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
-            }
+            FavoriteSongService.UpdateFavorite(favoriteSong);
 
-            return Result.Result();
+            ResponseContext.AddData($"The song [{favoriteSong.SongID}] updated successfully " +
+                $"for the user [{favoriteSong.UserID}]!");
+
+            return Ok(ResponseContext.Body);
         }
 
 
-        [HttpGet("get-favorites")]
-        public IActionResult GetFavorites()
+        [HttpGet("favorites")]
+        public IActionResult GetFavoriteSongs()
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null)
-            {
-                List<FavoriteSong> favorites = FavoriteSongService.GetFavorites(CurrentUser);
+            List<FavoriteSong> favorites = FavoriteSongService.GetFavorites(CurrentUser);
 
-                Result.AddData(favorites.Select(fs =>
-                {
-                    var song = Mapper.Map<SongReadDto>(SongService.GetSong(fs.SongID));
-                    song.UserScore = fs.Score;
-                    return song;
-                }));
-            }
-            else
+            ResponseContext.AddData(favorites.Select(fs =>
             {
-                Result.AddException("Unauthorized user!",
-                    ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
-            }
+                var song = Mapper.Map<SongReadDto>(SongService.GetSong(fs.SongID));
+                song.UserScore = fs.Score;
+                return song;
+            }));
 
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
+        #endregion
     }
 }

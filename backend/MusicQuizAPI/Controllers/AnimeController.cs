@@ -24,11 +24,15 @@ namespace MusicQuizAPI.Controllers
     [Route("api/anime")]
     public class AnimeController : ControllerBase
     {
+        #region Properties
         AnimeService AnimeService { get; set; }
         UserService UserService { get; set; }
         FavoriteAnimeService FavoriteAnimeService { get; set; }
-        ResultContext Result { get; set; }
+        ResponseContext ResponseContext { get; set; }
         IMapper Mapper { get; set; }
+        #endregion
+
+
 
         public AnimeController(AnimeService animeService, UserService userService,
             FavoriteAnimeService favoriteAnimeService, IMapper mapper)
@@ -36,160 +40,110 @@ namespace MusicQuizAPI.Controllers
             AnimeService = animeService;
             UserService = userService;
             FavoriteAnimeService = favoriteAnimeService;
-            Result = new ResultContext();
+            ResponseContext = new ResponseContext();
             Mapper = mapper;
         }
 
-        [HttpGet("search")]
+
+
+        #region Methods
+        [HttpGet]
         public IActionResult Search([FromQuery] SearchAnimeParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
             List<Anime> foundedAnimes = AnimeService.SearchAnime(parameters.Title);
             
-            Result.AddData(foundedAnimes.Select(a => 
+            ResponseContext.AddData(foundedAnimes.Select(a => 
             {
                 var anime = Mapper.Map<AnimeReadDto>(a);
                 anime.UserScore = FavoriteAnimeService.GetFavoriteScore(CurrentUser.UserID, a.AnimeID);
                 return anime;
 
             }));
-
-            return Result.Result();
+            
+            return Ok(ResponseContext.Body);
         }
 
-        [HttpPost("add-favorite")]
-        public IActionResult AddToFavorites([FromQuery] AddFavoriteParamModel parameters)
+
+        [HttpPost("favorites")]
+        public IActionResult AddFavoriteAnime([FromBody] AddFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null)
+            FavoriteAnime newFavoriteAnime = new FavoriteAnime
             {
-                FavoriteAnime newFavoriteAnime = new FavoriteAnime
-                {
-                    UserID = CurrentUser.UserID,
-                    AnimeID = parameters.ID,
-                    Score = parameters.Score
-                };
+                UserID = CurrentUser.UserID,
+                AnimeID = parameters.ID,
+                Score = parameters.Score
+            };
 
-                if (FavoriteAnimeService.AddFavorite(newFavoriteAnime))
-                {
-                    Result.AddData($"The anime [{newFavoriteAnime.AnimeID}] " +
-                        $"was added successfully to the user [{newFavoriteAnime.UserID}]!",
-                        HttpStatusCode.Created);
-                }
-                else
-                {
-                    Result.AddException($"The anime [{newFavoriteAnime.AnimeID}] " +
-                        $"is already in favorites for user [{newFavoriteAnime.UserID}] or doesn't exist!",
-                        ExceptionCode.AlreadyInOrDoesNotExistArgument);
-                }
-            }
-            else
-            {
-                Result.AddException("Unauthorized user!",
-                    ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
-            }
+            FavoriteAnimeService.AddFavorite(newFavoriteAnime);
 
-            return Result.Result();
+            ResponseContext.AddData($"The anime [{newFavoriteAnime.AnimeID}] " +
+                $"was added successfully to the user [{newFavoriteAnime.UserID}]!");
+
+            return Created("", ResponseContext.Body);
         }
 
 
-        [HttpDelete("remove-favorite")]
-        public IActionResult RemoveFromFavorites([FromQuery] RemoveFavoriteParamModel parameters)
+        [HttpDelete("favorites")]
+        public IActionResult RemoveFavoriteAnime([FromBody] RemoveFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null)
+            FavoriteAnime favoriteAnime = new FavoriteAnime
             {
-                FavoriteAnime favoriteAnime = new FavoriteAnime
-                {
-                    UserID = CurrentUser.UserID,
-                    AnimeID = parameters.ID
-                };
+                UserID = CurrentUser.UserID,
+                AnimeID = parameters.ID
+            };
 
-                if (FavoriteAnimeService.RemoveFavorite(favoriteAnime))
-                {
-                    Result.AddData($"The anime [{favoriteAnime.AnimeID}] was removed successfully " +
-                        $"from the user [{favoriteAnime.UserID}]!");
-                }
-                else
-                {
-                    Result.AddException($"The anime [{favoriteAnime.AnimeID}] is already " +
-                        $"not in favorites for user {favoriteAnime.UserID}!",
-                        ExceptionCode.AlreadyInOrDoesNotExistArgument);
-                }
-            }
-            else
-            {
-                Result.AddException("Unauthorized user!",
-                    ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
-            }
+            FavoriteAnimeService.RemoveFavorite(favoriteAnime);
+            
+            ResponseContext.AddData($"The anime [{favoriteAnime.AnimeID}] was removed successfully " +
+                $"from the user [{favoriteAnime.UserID}]!");
 
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
 
 
-        [HttpPatch("update-favorite")]
-        public IActionResult UpdateFavorite([FromQuery] UpdateFavoriteParamModel parameters)
+        [HttpPatch("favorites")]
+        public IActionResult UpdateFavoriteAnime([FromBody] UpdateFavoriteParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null)
+            FavoriteAnime favoriteAnime = new FavoriteAnime
             {
-                FavoriteAnime favoriteAnime = new FavoriteAnime
-                {
-                    UserID = CurrentUser.UserID,
-                    AnimeID = parameters.ID,
-                    Score = parameters.Score
-                };
+                UserID = CurrentUser.UserID,
+                AnimeID = parameters.ID,
+                Score = parameters.Score
+            };
 
-                if (FavoriteAnimeService.UpdateFavorite(favoriteAnime))
-                {
-                    Result.AddData($"The anime [{favoriteAnime.AnimeID}] updated successfully " +
-                        $"for the user [{favoriteAnime.UserID}]!");
-                }
-                else
-                {
-                    Result.AddException($"The anime [{favoriteAnime.AnimeID}] doesn't " +
-                        $"exist in favorites for user [{favoriteAnime.UserID}]!",
-                        ExceptionCode.AlreadyInOrDoesNotExistArgument);
-                }
-            }
-            else
-            {
-                Result.AddException("Unauthorized user!",
-                    ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
-            }
+            FavoriteAnimeService.UpdateFavorite(favoriteAnime);
 
-            return Result.Result();
+            ResponseContext.AddData($"The anime [{favoriteAnime.AnimeID}] updated successfully " +
+                $"for the user [{favoriteAnime.UserID}]!");
+
+            return Ok(ResponseContext.Body);
         }
 
 
-        [HttpGet("get-favorites")]
-        public IActionResult GetFavorites()
+        [HttpGet("favorites")]
+        public IActionResult GetFavoriteAnime()
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (CurrentUser != null)
-            {
-                List<FavoriteAnime> favorites = FavoriteAnimeService.GetFavorites(CurrentUser.UserID);
+            List<FavoriteAnime> favorites = FavoriteAnimeService.GetFavorites(CurrentUser.UserID);
 
-                // Converts FavoriteAnime to Anime object and sets the user score
-                Result.AddData(favorites.Select(fa => 
-                {
-                    var anime = Mapper.Map<AnimeReadDto>(AnimeService.GetAnime(fa.AnimeID));
-                    anime.UserScore = fa.Score;
-                    return anime;
-                }));
-            }
-            else
+            ResponseContext.AddData(favorites.Select(fa => 
             {
-                Result.AddException("Unauthorized user!",
-                    ExceptionCode.Unauthorized, HttpStatusCode.Unauthorized);
-            }
+                var anime = Mapper.Map<AnimeReadDto>(AnimeService.GetAnime(fa.AnimeID));
+                anime.UserScore = fa.Score;
+                return anime;
+            }));
 
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
+        #endregion
     }
 }

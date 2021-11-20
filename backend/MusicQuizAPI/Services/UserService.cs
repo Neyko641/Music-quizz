@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using MusicQuizAPI.Database;
 using MusicQuizAPI.Models.Database;
 using MusicQuizAPI.Models;
+using MusicQuizAPI.Exceptions;
 using System.Linq;
 
 namespace MusicQuizAPI.Services
@@ -25,8 +26,15 @@ namespace MusicQuizAPI.Services
 
         public bool RegisterUser(string username, string password)
         {
-            if (_userRepo.Exist(username) || string.IsNullOrWhiteSpace(username)
-                || string.IsNullOrWhiteSpace(password)) return false;
+            if (_userRepo.Exist(username))
+            {
+                throw new AlreadyExistException($"Username '{username}' is already taken!");
+            } 
+
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            {
+                throw new BadArgumentException("Username and password cannot be empty!");
+            }
 
             _userRepo.Add(new User 
             { 
@@ -38,7 +46,7 @@ namespace MusicQuizAPI.Services
 
         public int GetIDByUsername(string username)
         {
-            if (string.IsNullOrWhiteSpace(username)) return -1;
+            if (string.IsNullOrWhiteSpace(username)) throw new BadArgumentException("Username cannot be empty!");
 
             var user = _userRepo.Get(username);
 
@@ -48,32 +56,29 @@ namespace MusicQuizAPI.Services
 
         public User GetByID(int id)
         {
-            if (id < 0) return null;
+            if (id < 0) throw new BadArgumentException("Index cannot be less than 0!");
 
             return _userRepo.Get(id);
         }
 
         public User GetByUsername(string username)
         {
-            if (string.IsNullOrWhiteSpace(username)) return null;
+            if (string.IsNullOrWhiteSpace(username)) throw new BadArgumentException("Username cannot be empty!");
 
             return _userRepo.Get(username);
         }
 
         public List<User> SearchUserByName(User user, string name, int limit)
         {
-            List<User> users = new List<User>();
+            if (string.IsNullOrWhiteSpace(name)) throw new BadArgumentException("Username cannot be empty!");
 
-            if (!string.IsNullOrWhiteSpace(name))
-            {
-                var friends = _friendshipService.GetFriends(user);
+            List<User> users = _userRepo.GetAllThatContainsName(name.ToLower())
+                .Take(limit)
+                .ToList();
 
-                users = _userRepo.GetAllThatContainsName(name.ToLower())
-                    .Take(limit)
-                    .ToList();
+            List<User> friends = _friendshipService.GetFriends(user);
 
-                users.ForEach(u => u.IsFriend = friends.Contains(u));
-            }
+            users.ForEach(u => u.IsFriend = friends.Contains(u));
 
             return users;
         }

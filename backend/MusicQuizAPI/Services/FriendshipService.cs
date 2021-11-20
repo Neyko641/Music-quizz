@@ -4,7 +4,7 @@ using System;
 using Microsoft.Extensions.Logging;
 using MusicQuizAPI.Database;
 using MusicQuizAPI.Models.Database;
-using MusicQuizAPI.Models;
+using MusicQuizAPI.Exceptions;
 using System.Linq;
 
 namespace MusicQuizAPI.Services
@@ -23,49 +23,74 @@ namespace MusicQuizAPI.Services
             _friendshipRepository = friendshipRepository;
         }
 
-        public bool SendRequest(User user, int id)
+        public void SendRequest(User user, int id)
         {
             User potentialFriend = _userRepo.Get(id);
 
-            if (potentialFriend != null)
+            if (potentialFriend == null) 
             {
-                if (!_friendshipRepository.Exist(user.UserID, potentialFriend.UserID))
-                {
-                    return _friendshipRepository.Add(new Friendship
-                    {
-                        RequestedUserID = user.UserID,
-                        AcceptedUserID = potentialFriend.UserID,
-                        StartDate = DateTime.Now
-                    }) > 0;
-                }
+                throw new NotExistException($"User [{id}] doesn't exist!");
+            }
+            
+            if (_friendshipRepository.Exist(user.UserID, potentialFriend.UserID))
+            {
+                throw new AlreadyExistException($"Friend request from User [{user.UserID}] " + 
+                    $"to user [{id}] is already sended!");
             }
 
-            return false;
+            _friendshipRepository.Add(new Friendship
+            {
+                RequestedUserID = user.UserID,
+                AcceptedUserID = potentialFriend.UserID,
+                StartDate = DateTime.Now
+            });
         }
 
-        public bool AcceptRequest(User user, int id)
+        public void AcceptRequest(User user, int id)
+        {
+            Friendship fs = _friendshipRepository.Get(id, user.UserID);
+
+            if (fs == null) 
+            {
+                throw new NotExistException($"No request is sent from user [{id}] to user [{user.UserID}]!");
+            }
+
+            if (fs.IsAccepted)
+            {
+                throw new AlreadyExistException($"User [{user.UserID}] and [{id}] are already friends!");
+            }
+            
+            fs.IsAccepted = true;
+            _friendshipRepository.Update(fs);
+        }
+
+        public void DeclineRequest(User user, int id)
+        {
+            Friendship fs = _friendshipRepository.Get(id, user.UserID);
+
+            if (fs == null) 
+            {
+                throw new NotExistException($"No request is sent from user [{id}] to user [{user.UserID}]!");
+            }
+
+            if (fs.IsAccepted)
+            {
+                throw new AlreadyExistException($"User [{user.UserID}] and [{id}] are already friends!");
+            }
+            
+            _friendshipRepository.Remove(fs);
+        }
+
+        public void RemoveFriend(User user, int id)
         {
             Friendship fs = _friendshipRepository.Get(user.UserID, id);
 
-            if (fs != null)
+            if (fs == null)
             {
-                fs.IsAccepted = true;
-                return _friendshipRepository.Update(fs) > 0;
+                throw new NotExistException($"User [{id}] is already not friend with user [{user.UserID}]!");
             }
 
-            return false;
-        }
-
-        public bool RemoveFriend(User user, int id)
-        {
-            Friendship fs = _friendshipRepository.Get(user.UserID, id);
-
-            if (fs != null)
-            {
-                return _friendshipRepository.Remove(fs) > 0;
-            }
-
-            return false;
+            _friendshipRepository.Remove(fs);
         }
 
         public List<User> GetFriends(User user)
@@ -74,8 +99,14 @@ namespace MusicQuizAPI.Services
 
             return _friendshipRepository.GetAll()
                 .Where(f => (f.RequestedUserID == id || f.AcceptedUserID == id) && f.IsAccepted)
-                .Select(f => f.AcceptedUserID == id ? _userRepo.Get(f.RequestedUserID) : _userRepo.Get(f.AcceptedUserID))
-                .Select(u => {u.IsFriend = true; return u; })
+                .Select(f => 
+                {
+                    User u;
+                    if (f.AcceptedUserID == id) u = _userRepo.Get(f.RequestedUserID);
+                    else u = _userRepo.Get(f.AcceptedUserID);
+                    u.IsFriend = true;
+                    return u;
+                })
                 .ToList();
         }
     }

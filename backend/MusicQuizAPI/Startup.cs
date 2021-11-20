@@ -101,6 +101,7 @@ namespace MusicQuizAPI
             // Using custom middleware
             app.UseMiddleware<ControllersCheckerMiddleware>();
             app.UseMiddleware<JwtMiddleware>();
+            app.UseMiddleware<ExceptionMiddleware>();
 
             // Using specified route patern
             app.UseMvc(builder =>

@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using MusicQuizAPI.Models;
+using MusicQuizAPI.Exceptions;
 using System.Net;
 
 namespace MusicQuizAPI.Middleware
@@ -9,26 +10,22 @@ namespace MusicQuizAPI.Middleware
     public class ControllersCheckerMiddleware
     {
         private readonly RequestDelegate _next;
-        ResultContext Result { get; set; }
+        ResponseContext Result { get; set; }
 
         public ControllersCheckerMiddleware(RequestDelegate next)
         {
             _next = next;
-            Result = new ResultContext();
+            Result = new ResponseContext();
         }
 
         public async Task Invoke(HttpContext context)
         {
             if (!Settings.AreControllersAvailable)
             {
-                Result.AddException("MusicQuiz API cannot be used right now. Please try again in a minute.", 
-                    ExceptionCode.Unavailable, HttpStatusCode.ServiceUnavailable);
-
-                var json = JsonConvert.SerializeObject(Result.Result());
-                
-                context.Response.StatusCode = (int)Result.StatusCode;
+                context.Response.StatusCode = (int)ExceptionCode.Unavailable;
                 context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync(json);
+                await context.Response.WriteAsync(new ErrorDetails((int)ExceptionCode.Unavailable,
+                    "MusicQuiz API cannot be used right now. Please try again in a minute.").ToString());
             }
             else
             {

@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace MusicQuizAPI.Models.Dtos
 {
+    [NotMapped]
     /// <summary> Represents User object as a Read type </summary>
     public class UserSecuredReadDto
     {

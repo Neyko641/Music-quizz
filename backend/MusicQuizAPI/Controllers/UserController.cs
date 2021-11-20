@@ -10,6 +10,7 @@ using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
 using MusicQuizAPI.Helpers;
 using MusicQuizAPI.Extensions;
+using MusicQuizAPI.Exceptions;
 using MusicQuizAPI.Models.Parameters;
 using MusicQuizAPI.Models.Database;
 using AutoMapper;
@@ -24,11 +25,16 @@ namespace MusicQuizAPI.Controllers
     [Route("api/user")]
     public class UserController : ControllerBase
     {
+        #region Properties
         UserService UserService { get; set; }
         FriendshipService FriendshipService { get; set; }
         ILogger<UserController> Logger { get; set; }
-        ResultContext Result { get; set; }
+        ResponseContext ResponseContext { get; set; }
         IMapper Mapper { get; set; }
+        #endregion
+
+
+
 
         public UserController(ILogger<UserController> logger, UserService userService,
             FriendshipService friendshipService, IMapper mapper)
@@ -36,29 +42,32 @@ namespace MusicQuizAPI.Controllers
             Logger = logger;
             UserService = userService;
             FriendshipService = friendshipService;
-            Result = new ResultContext();
+            ResponseContext = new ResponseContext();
             Mapper = mapper;
         }
 
 
+
+        #region  Methods
         [HttpGet]
         public IActionResult GetUser([FromQuery] UnrequiredUserIDParamModel parameters)
         {
             if (parameters.ID == -1)
             {
-                Result.AddData(Mapper.Map<UserReadDto>((User)HttpContext.Items["User"]));
+                ResponseContext.AddData(Mapper.Map<UserReadDto>((User)HttpContext.Items["User"]));
             }
             else
             {
                 User user = UserService.GetByID(parameters.ID);
 
-                if (user != null) Result.AddData(Mapper.Map<UserSecuredReadDto>(user));
-                else Result.AddException($"Cannot find user [{parameters.ID}]!",
-                    ExceptionCode.AlreadyInOrDoesNotExistArgument, HttpStatusCode.NotFound);
+                if (user != null) 
+                {
+                    ResponseContext.AddData(Mapper.Map<UserSecuredReadDto>(user));
+                }
+                else throw new NotExistException($"User [{parameters.ID}] doesn't exist!");
             }
-            
 
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
 
 
@@ -67,105 +76,72 @@ namespace MusicQuizAPI.Controllers
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            List<User> users = UserService.SearchUserByName(CurrentUser,
-                parameters.Name, parameters.Limit);
+            List<User> users = UserService.SearchUserByName(CurrentUser, parameters.Name, parameters.Limit);
 
             switch (parameters.Type)
             {
                 case "simple": 
-                    Result.AddData(Mapper.Map<IEnumerable<UserSimplifiedReadDto>>(users));
+                    ResponseContext.AddData(Mapper.Map<IEnumerable<UserSimplifiedReadDto>>(users));
                     break;
                 case "detailed":
-                    Result.AddData(Mapper.Map<IEnumerable<UserSecuredReadDto>>(users));
+                    ResponseContext.AddData(Mapper.Map<IEnumerable<UserSecuredReadDto>>(users));
                     break;
                 default:
-                    Result.AddException("How did you even get here ?!?", ExceptionCode.Unknown);
-                    break;
+                    throw new UnexcpectedException("How did you even get here ?!?");
             }
 
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
 
 
-        [HttpPost("add-friend")]
-        public IActionResult InviteFriend([FromQuery] UserIDParamModel parameters)
+        [HttpPost("friends")]
+        public IActionResult SendFriendRequest([FromBody] UserIDParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (FriendshipService.SendRequest(CurrentUser, parameters.ID))
-            {
-                Result.AddData("Successfully sended friend request from user " +
-                    $"[{CurrentUser.UserID}] to user [{parameters.ID}].");
-            }
-            else
-            {
-                Result.AddException($"User[{CurrentUser.UserID}] already has sended invite " +
-                    $"to user [{parameters.ID}] or the user doesn't exist.",
-                    ExceptionCode.AlreadyInOrDoesNotExistArgument);
-            }
+            FriendshipService.SendRequest(CurrentUser, parameters.ID);
+            
+            ResponseContext.AddData("Successfully sended friend request from user " +
+                $"[{CurrentUser.UserID}] to user [{parameters.ID}].");
 
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
 
 
-        [HttpPut("accept-friend")]
-        public IActionResult AcceptFriend([FromQuery] UserIDParamModel parameters)
+        [HttpPut("friends")]
+        public IActionResult ManageFriendRequest([FromBody] ManageFriendRequestParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (FriendshipService.AcceptRequest(CurrentUser, parameters.ID))
+            if (parameters.IsAccepted)
             {
-                Result.AddData($"Successfully accepted user[{parameters.ID}] for user[{CurrentUser.UserID}].");
+                FriendshipService.AcceptRequest(CurrentUser, parameters.ID);
+                ResponseContext.AddData($"Successfully accepted user [{parameters.ID}] for user [{CurrentUser.UserID}].");
             }
             else
             {
-                Result.AddException($"Failed to accepted user[{parameters.ID}] for user[{CurrentUser.UserID}].",
-                    ExceptionCode.BadArgument);
+                FriendshipService.DeclineRequest(CurrentUser, parameters.ID);
+                ResponseContext.AddData($"Successfully declined user [{parameters.ID}] for user [{CurrentUser.UserID}].");
             }
 
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
 
 
-        [HttpPut("decline-friend")]
-        public IActionResult DeclineFriend([FromQuery] UserIDParamModel parameters)
+        [HttpDelete("friends")]
+        public IActionResult RemoveFriend([FromBody] UserIDParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
 
-            if (FriendshipService.RemoveFriend(CurrentUser, parameters.ID))
-            {
-                Result.AddData($"Successfully declined user[{parameters.ID}] for user[{CurrentUser.UserID}].");
-            }
-            else
-            {
-                Result.AddException($"Failed to decline user[{parameters.ID}] for " +
-                    $"user[{CurrentUser.UserID}].", ExceptionCode.BadArgument);
-            }
+            FriendshipService.RemoveFriend(CurrentUser, parameters.ID);
 
-            return Result.Result();
+            ResponseContext.AddData($"Successfully removed user [{parameters.ID}] for user [{CurrentUser.UserID}].");
+            
+            return Ok(ResponseContext.Body);
         }
 
 
-        [HttpDelete("remove-friend")]
-        public IActionResult RemoveFriend([FromQuery] UserIDParamModel parameters)
-        {
-            User CurrentUser = (User)HttpContext.Items["User"];
-
-            if (FriendshipService.RemoveFriend(CurrentUser, parameters.ID))
-            {
-                Result.AddData($"Successfully removed user[{parameters.ID}] for user[{CurrentUser.UserID}].");
-            }
-            else
-            {
-                Result.AddException($"Failed to remove user[{parameters.ID}] " +
-                    $"for user[{CurrentUser.UserID}].", ExceptionCode.AlreadyInOrDoesNotExistArgument);
-            }
-
-            return Result.Result();
-        }
-
-
-        [HttpGet("get-friends")]
+        [HttpGet("friends")]
         public IActionResult GetFriends([FromQuery] GetUserParamModel parameters)
         {
             User CurrentUser = (User)HttpContext.Items["User"];
@@ -174,9 +150,25 @@ namespace MusicQuizAPI.Controllers
                 .Take(parameters.Limit)
                 .ToList();
 
-            Result.AddData(Mapper.Map<IEnumerable<UserSecuredReadDto>>(friends));
+            ResponseContext.AddData(Mapper.Map<IEnumerable<UserSecuredReadDto>>(friends));
 
-            return Result.Result();
+            return Ok(ResponseContext.Body);
         }
+
+
+        [HttpGet("requests")]
+        public IActionResult GetFriendRequests([FromQuery] GetUserParamModel parameters)
+        {
+            User CurrentUser = (User)HttpContext.Items["User"];
+
+            List<User> friends = FriendshipService.GetFriends(CurrentUser) // I'm joking, you don't have any friends
+                .Take(parameters.Limit)
+                .ToList();
+
+            ResponseContext.AddData(Mapper.Map<IEnumerable<UserSecuredReadDto>>(friends));
+
+            return Ok(ResponseContext.Body);
+        }
+        #endregion
     }
 }

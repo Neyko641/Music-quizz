@@ -7,102 +7,87 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
+using MusicQuizAPI.Exceptions;
 
 namespace MusicQuizAPI.Helpers
 {
     public static class SecurityHelper
     {
-        public static ResultContext RegisterUser(ResultContext result, UserService userService, 
+        public static ResponseContext RegisterUser(ResponseContext result, UserService userService, 
             string authorizationHeader, string secretKey)
         {
-            if (string.IsNullOrWhiteSpace(authorizationHeader))
+            try 
             {
-                result.AddException("Authorization header is required!", ExceptionCode.MissingHeader);
-            }
-            else
-            {
-                try 
+                var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(authorizationHeader)).Split(':');
+
+                if (userService.RegisterUser(credentials[0], credentials[1]))
                 {
-                    var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(authorizationHeader)).Split(':');
+                    int userID = userService.GetIDByUsername(credentials[0]);
 
-                    if (userService.RegisterUser(credentials[0], credentials[1]))
+                    if (userID != -1)
                     {
-                        int userID = userService.GetIDByUsername(credentials[0]);
+                        var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
-                        if (userID != -1)
+                        var token = GenerateToken(secret, userID.ToString());
+
+                        result.AddData(new 
                         {
-                            var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-
-                            var token = GenerateToken(secret, userID.ToString());
-
-                            result.AddData(new 
-                            {
-                                token = token
-                            }, HttpStatusCode.Created);
-                        }
-                        else
-                        {
-                            result.AddException("Something went wrong with the registration.", 
-                                ExceptionCode.Unknown);
-                        }
+                            token = token
+                        }, HttpStatusCode.Created);
                     }
                     else
                     {
-                        result.AddException($"Username '{credentials[0]}' is already taken.", 
-                            ExceptionCode.UserTaken);
+                        throw new UnexcpectedException("Something went wrong with the registration.");
                     }
                 }
-                catch (Exception)
+                else
                 {
-                    result.AddException("Bad payload!", ExceptionCode.Unknown);
+                    throw new UnexcpectedException("Something went wrong with the registration.");
                 }
+            }
+            catch (FormatException)
+            {
+                throw new UnexcpectedException("Bad payload!");
             }
 
             return result;
         }
 
-        public static ResultContext LoginUser(ResultContext result, UserService userService, 
+        public static ResponseContext LoginUser(ResponseContext result, UserService userService, 
             string authorizationHeader, string secretKey)
         {
-            if (string.IsNullOrWhiteSpace(authorizationHeader))
+            try 
             {
-                result.AddException("Authorization header is required!", ExceptionCode.MissingHeader);
-            }
-            else
-            {
-                try 
+                var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(authorizationHeader)).Split(':');
+
+                var user = userService.GetByUsername(credentials[0]);
+
+                if (user != null)
                 {
-                    var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(authorizationHeader)).Split(':');
-
-                    var user = userService.GetByUsername(credentials[0]);
-
-                    if (user != null)
+                    if (user.Password == credentials[1])
                     {
-                        if (user.Password == credentials[1])
-                        {
-                            var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+                        var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
-                            var token = GenerateToken(secret, user.UserID.ToString());
+                        var token = GenerateToken(secret, user.UserID.ToString());
 
-                            result.AddData(new 
-                            {
-                                token = token
-                            });
-                        }
-                        else
+                        result.AddData(new 
                         {
-                            result.AddException("Wrong password!", ExceptionCode.BadHeader);
-                        }
+                            token = token
+                        });
                     }
                     else
                     {
-                        result.AddException("This user doesn't exist.", ExceptionCode.UnknownUser);
+                        throw new BadHeaderException("Wrong password!");
                     }
                 }
-                catch (Exception)
+                else
                 {
-                    result.AddException("Bad payload!", ExceptionCode.Unknown);
+                    throw new NotExistException("This user doesn't exist.");
                 }
+            }
+            catch (FormatException)
+            {
+                throw new UnexcpectedException("Bad payload!");
             }
 
             return result;

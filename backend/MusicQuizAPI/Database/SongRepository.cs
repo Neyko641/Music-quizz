@@ -14,6 +14,9 @@ namespace MusicQuizAPI.Database
 
         public bool ExistInAnime(string title) 
             => Db.Animes.Any(a => a.Songs.Any(s => s.Title == title));
+
+        public bool Exist(int id) 
+            => Db.Songs.Any(s => s.SongID == id);
         
         public int Add(Song song)
         {
@@ -21,7 +24,8 @@ namespace MusicQuizAPI.Database
             return Db.SaveChanges();
         }
         
-        public Song Get(int id) => Db.Songs.FirstOrDefault(s => s.SongID == id);
+        public Song Get(int id) 
+            => Db.Songs.FirstOrDefault(s => s.SongID == id);
         
         public IQueryable<Song> GetAllThatContainsSongTitle(string title) 
             => Db.Songs.Where(s => s.Title.ToLower().Contains(title));

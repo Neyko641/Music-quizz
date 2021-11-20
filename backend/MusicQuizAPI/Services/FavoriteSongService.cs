@@ -2,8 +2,9 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using MusicQuizAPI.Database;
 using MusicQuizAPI.Models.Database;
-using MusicQuizAPI.Models;
+using MusicQuizAPI.Exceptions;
 using System.Collections.Generic;
+
 
 namespace MusicQuizAPI.Services
 {
@@ -26,70 +27,72 @@ namespace MusicQuizAPI.Services
         public bool Exist(FavoriteSong favoriteSong)
             => _favSongRepo.Exist(favoriteSong);
 
-        public bool AddFavorite(FavoriteSong favoriteSong)
+        public void AddFavorite(FavoriteSong favoriteSong)
         {
-            if (!Exist(favoriteSong))
+            if (!_songRepo.Exist(favoriteSong.SongID)) 
             {
-                if (_favSongRepo.Add(favoriteSong) > 0)
-                {
-                    // Updates the average score of the song
-                    _songRepo.AddScore(favoriteSong.SongID, favoriteSong.Score);
-
-                    return true;
-                }   
-                
-                // It shouldn't be getting here at any condition 
-                return false;
+                throw new BadArgumentException($"The song [{favoriteSong.SongID}] doesn't exist!");
             }
-            else return false;
+
+            if (Exist(favoriteSong)) 
+            {
+                throw new AlreadyExistException($"The song [{favoriteSong.SongID}] " +
+                    $"is already in favorites for user [{favoriteSong.UserID}]");
+            } 
+
+            if (_favSongRepo.Add(favoriteSong) == 0)
+            {
+                throw new UnexcpectedException($"Cannot add the song [{favoriteSong.SongID}] " +
+                    $"to favorites for user [{favoriteSong.UserID}]");
+            } 
+
+            // Updates the average score of the song if its added
+            _songRepo.AddScore(favoriteSong.SongID, favoriteSong.Score);
         }
 
 
-        public bool RemoveFavorite(FavoriteSong favoriteSong)
+        public void RemoveFavorite(FavoriteSong favoriteSong)
         {
             FavoriteSong favoriteSongToRemove = _favSongRepo.Get(favoriteSong.UserID, favoriteSong.SongID);
 
-            if (favoriteSongToRemove != null && favoriteSongToRemove != default(FavoriteSong))
+            if (favoriteSongToRemove == null)
             {
-                if (_favSongRepo.Remove(favoriteSongToRemove) > 0)
-                {
-                    // Updates the average score of the song
-                    _songRepo.RemoveScore(favoriteSongToRemove.SongID, favoriteSongToRemove.Score);
-
-                    return true;
-                }   
-
-                // It shouldn't be getting here at any condition 
-                return false;
+                throw new NotExistException($"The song [{favoriteSong.SongID}] is already " +
+                    $"not in favorites for user {favoriteSong.UserID}!");
             }
-            
-            return false;
+                
+            if (_favSongRepo.Remove(favoriteSongToRemove) == 0)
+            {
+                throw new UnexcpectedException($"Cannot remove the song [{favoriteSong.SongID}] " +
+                    $"from favorites for user [{favoriteSong.UserID}]");
+            }   
+
+            // Updates the average score of the song
+            _songRepo.RemoveScore(favoriteSongToRemove.SongID, favoriteSongToRemove.Score);
         }
 
 
-        public bool UpdateFavorite(FavoriteSong favoriteSong)
+        public void UpdateFavorite(FavoriteSong favoriteSong)
         {
             FavoriteSong favoriteSongToUpdate = _favSongRepo.Get(favoriteSong.UserID, favoriteSong.SongID);
 
-            if (favoriteSongToUpdate != null && favoriteSongToUpdate != default(FavoriteSong))
+            if (favoriteSongToUpdate == null)
             {
-                int previousScore = favoriteSongToUpdate.Score;
-                favoriteSongToUpdate.Score = favoriteSong.Score;
-
-                if (_favSongRepo.Update(favoriteSongToUpdate) > 0)
-                {
-                    // Updates the average score of the song
-                    _songRepo.UpdateScore(favoriteSongToUpdate.SongID, 
-                        favoriteSongToUpdate.Score, previousScore);
-
-                    return true;
-                }   
-                
-                // It shouldn't be getting here at any condition 
-                return false;
+                throw new NotExistException($"The song [{favoriteSong.SongID}] is " +
+                    $"not in favorites for user {favoriteSong.UserID}!");
             }
             
-            return false;
+            int previousScore = favoriteSongToUpdate.Score;
+            favoriteSongToUpdate.Score = favoriteSong.Score;
+
+            if (_favSongRepo.Update(favoriteSongToUpdate) == 0)
+            {
+                throw new UnexcpectedException($"Cannot update the song [{favoriteSong.SongID}] " +
+                    $"from favorites for user [{favoriteSong.UserID}]");
+            }
+
+            // Updates the average score of the song
+            _songRepo.UpdateScore(favoriteSongToUpdate.SongID, favoriteSongToUpdate.Score, previousScore);
         }
 
 
