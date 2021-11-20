@@ -63,4 +63,4 @@ Be aware that even with custom codes, argument validation will not give you exac
   ]
 }
 ```
-> Check [error codes]() for more info.
+> #### Check [error codes](MusicQuizAPI/Docs/ERRORCODES.md) for more info.
