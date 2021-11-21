@@ -13,7 +13,11 @@ namespace MusicQuizAPI.Database
             Db = db;
         }
 
-        public bool Exist(string username) => Db.Users.Any(u => u.Username == username);
+        public bool ExistWithEmail(string email) 
+            => Db.Users.Any(u => u.Email == email);
+
+        public bool ExistWithUsername(string username) 
+            => Db.Users.Any(u => u.Username == username);
         
         public int Add(User user) 
         {
@@ -21,10 +25,14 @@ namespace MusicQuizAPI.Database
             return Db.SaveChanges();
         }
 
-        public User Get(string username) => 
-            Db.Users.FirstOrDefault(u => u.Username == username);
+        public User GetByUsername(string username) 
+            => Db.Users.FirstOrDefault(u => u.Username == username);
 
-        public User Get(int id) => Db.Users.FirstOrDefault(u => u.UserID == id);
+        public User GetByEmail(string email) 
+            => Db.Users.FirstOrDefault(u => u.Email == email);
+
+        public User Get(int id) 
+            => Db.Users.FirstOrDefault(u => u.UserID == id);
 
         public List<User> GetAllThatContainsName(string name) 
             => Db.Users.Where(u => u.Username.ToLower().Contains(name)).ToList();

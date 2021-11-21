@@ -24,31 +24,35 @@ namespace MusicQuizAPI.Services
             _friendshipService= friendshipService;
         }
 
-        public bool RegisterUser(string username, string password)
+        public bool RegisterUser(string email, string password, string username)
         {
-            if (_userRepo.Exist(username))
+            if (_userRepo.ExistWithEmail(email))
             {
-                throw new AlreadyExistException($"Username '{username}' is already taken!");
+                throw new AlreadyExistException($"Email '{email}' is already taken!");
             } 
 
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password)
+                || string.IsNullOrWhiteSpace(email))
             {
-                throw new BadArgumentException("Username and password cannot be empty!");
+                throw new BadArgumentException("Username, Password and Email cannot be empty!");
             }
 
             _userRepo.Add(new User 
             { 
-                Username = username, Password = password, RegisteredDate = DateTime.Now
+                Username = username, 
+                Password = password, 
+                Email = email,
+                RegisteredDate = DateTime.Now
             });
 
-            return _userRepo.Exist(username);
+            return _userRepo.ExistWithEmail(email);
         }
 
-        public int GetIDByUsername(string username)
+        public int GetIDByEmail(string email)
         {
-            if (string.IsNullOrWhiteSpace(username)) throw new BadArgumentException("Username cannot be empty!");
+            if (string.IsNullOrWhiteSpace(email)) throw new BadArgumentException("Email cannot be empty!");
 
-            var user = _userRepo.Get(username);
+            var user = _userRepo.GetByEmail(email);
 
             if (user != null) return user.UserID;
             else return -1;
@@ -61,11 +65,11 @@ namespace MusicQuizAPI.Services
             return _userRepo.Get(id);
         }
 
-        public User GetByUsername(string username)
+        public User GetByEmail(string email)
         {
-            if (string.IsNullOrWhiteSpace(username)) throw new BadArgumentException("Username cannot be empty!");
+            if (string.IsNullOrWhiteSpace(email)) throw new BadArgumentException("Email cannot be empty!");
 
-            return _userRepo.Get(username);
+            return _userRepo.GetByEmail(email);
         }
 
         public List<User> SearchUserByName(User user, string name, int limit)

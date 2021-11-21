@@ -16,9 +16,11 @@ namespace MusicQuizAPI.Models.Database
         [Required]
         public string Password { get; set; }
 
+        [Required]
         public string Email { get; set; }
 
-        public string Avatar { get; set; }
+        [Required]
+        public string Avatar { get; set; } = "https://miro.medium.com/1*W35QUSvGpcLuxPo3SRTH4w.png";
 
         [Required]
         public int GuessCount { get; set; } = 0;
