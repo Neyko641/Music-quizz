@@ -4,7 +4,6 @@ namespace MusicQuizAPI.Exceptions
     {
         // Basic
         Unexcpected,
-        Unavailable,
 
         // Arguments
         BadArgument,
@@ -18,6 +17,7 @@ namespace MusicQuizAPI.Exceptions
         NotExist,
 
         // Already defined
-        Unauthorized = 401
+        Unauthorized = 401,
+        Unavailable = 503,
     }
 }
