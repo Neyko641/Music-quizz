@@ -1,20 +1,19 @@
-﻿﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
+﻿﻿using System;
+using System.Net;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Cors;
 using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
 using MusicQuizAPI.Helpers;
+using MusicQuizAPI.Models.Dtos;
 using MusicQuizAPI.Models.Parameters;
-using MusicQuizAPI.Models.API;
-using Microsoft.AspNetCore.Authorization;
-using System.Net;
 using MusicQuizAPI.Models.Database;
 using AutoMapper;
-using MusicQuizAPI.Models.Dtos;
+
 
 namespace MusicQuizAPI.Controllers
 {
@@ -53,7 +52,7 @@ namespace MusicQuizAPI.Controllers
             User CurrentUser = (User)HttpContext.Items["User"];
 
             List<Anime> foundedAnimes = AnimeService.SearchAnime(parameters.Title);
-            
+
             ResponseContext.AddData(foundedAnimes.Select(a => 
             {
                 var anime = Mapper.Map<AnimeReadDto>(a);
@@ -81,7 +80,7 @@ namespace MusicQuizAPI.Controllers
             FavoriteAnimeService.AddFavorite(newFavoriteAnime);
 
             ResponseContext.AddData($"The anime [{newFavoriteAnime.AnimeID}] " +
-                $"was added successfully to the user [{newFavoriteAnime.UserID}]!");
+                $"was added successfully to the user [{newFavoriteAnime.UserID}]!", HttpStatusCode.Created);
 
             return Created("", ResponseContext.Body);
         }

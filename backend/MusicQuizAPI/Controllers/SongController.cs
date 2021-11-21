@@ -1,20 +1,21 @@
-﻿﻿using Microsoft.AspNetCore.Mvc;
+﻿﻿using System;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authorization;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
 using MusicQuizAPI.Helpers;
 using MusicQuizAPI.Extensions;
+using MusicQuizAPI.Models.Dtos;
 using MusicQuizAPI.Models.Parameters;
 using MusicQuizAPI.Models.Database;
-using System.Net;
 using AutoMapper;
-using MusicQuizAPI.Models.Dtos;
+
 
 namespace MusicQuizAPI.Controllers
 {
@@ -103,7 +104,7 @@ namespace MusicQuizAPI.Controllers
             FavoriteSongService.AddFavorite(newFavoriteSong);
             
             ResponseContext.AddData($"The song [{newFavoriteSong.SongID}] " +
-                $"was added successfully to the user [{newFavoriteSong.UserID}]!");
+                $"was added successfully to the user [{newFavoriteSong.UserID}]!", HttpStatusCode.Created);
 
             return Created("", ResponseContext.Body);
         }

@@ -25,7 +25,7 @@ namespace MusicQuizAPI.Middleware
                 context.Response.StatusCode = (int)ExceptionCode.Unavailable;
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsync(new ErrorDetails((int)ExceptionCode.Unavailable,
-                    "MusicQuiz API cannot be used right now. Please try again in a minute.").ToString());
+                    "API cannot be used right now. Please try again in a minute.").ToString());
             }
             else
             {

@@ -11,11 +11,15 @@ namespace MusicQuizAPI.Middleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<ExceptionMiddleware> _logger;
+
+
         public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
         {
             _logger = logger;
             _next = next;
         }
+
+
         public async Task InvokeAsync(HttpContext httpContext)
         {
             try
@@ -69,6 +73,7 @@ namespace MusicQuizAPI.Middleware
             await context.Response.WriteAsync(new ErrorDetails(context.Response.StatusCode,
                 exception.Message).ToString());
         }
+
 
         private async Task HandleDefaultExceptionAsync(HttpContext context, Exception exception)
         {

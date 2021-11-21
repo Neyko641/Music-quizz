@@ -1,21 +1,22 @@
-﻿﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Cors;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
-using System;
+﻿﻿using System;
+using System.Net;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
 using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
 using MusicQuizAPI.Helpers;
 using MusicQuizAPI.Extensions;
 using MusicQuizAPI.Exceptions;
+using MusicQuizAPI.Models.Dtos;
 using MusicQuizAPI.Models.Parameters;
 using MusicQuizAPI.Models.Database;
 using AutoMapper;
-using MusicQuizAPI.Models.Dtos;
-using System.Net;
+
 
 namespace MusicQuizAPI.Controllers
 {
@@ -102,9 +103,9 @@ namespace MusicQuizAPI.Controllers
             FriendshipService.SendRequest(CurrentUser, parameters.ID);
             
             ResponseContext.AddData("Successfully sended friend request from user " +
-                $"[{CurrentUser.UserID}] to user [{parameters.ID}].");
+                $"[{CurrentUser.UserID}] to user [{parameters.ID}].", HttpStatusCode.Created);
 
-            return Ok(ResponseContext.Body);
+            return Created("", ResponseContext.Body);
         }
 
 
@@ -157,17 +158,9 @@ namespace MusicQuizAPI.Controllers
 
 
         [HttpGet("requests")]
-        public IActionResult GetFriendRequests([FromQuery] GetUserParamModel parameters)
+        public IActionResult GetFriendRequests()
         {
-            User CurrentUser = (User)HttpContext.Items["User"];
-
-            List<User> friends = FriendshipService.GetFriends(CurrentUser) // I'm joking, you don't have any friends
-                .Take(parameters.Limit)
-                .ToList();
-
-            ResponseContext.AddData(Mapper.Map<IEnumerable<UserSecuredReadDto>>(friends));
-
-            return Ok(ResponseContext.Body);
+            return Ok();
         }
         #endregion
     }

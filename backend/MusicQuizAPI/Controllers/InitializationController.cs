@@ -1,16 +1,17 @@
-﻿﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
+﻿﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
 using MusicQuizAPI.Helpers;
 using MusicQuizAPI.Models.Parameters;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Configuration;
+
 
 namespace MusicQuizAPI.Controllers
 {
@@ -21,33 +22,40 @@ namespace MusicQuizAPI.Controllers
     {
         private readonly InitialDatabaseService _service;
         private readonly IConfiguration _config;
+        private readonly ILogger<InitializationController> _logger;
 
-        public InitializationController(InitialDatabaseService service, IConfiguration config)
+        public InitializationController(InitialDatabaseService service, IConfiguration config,
+            ILogger<InitializationController> logger)
         {
+            _logger = logger;
             _service = service;
             _config = config;
         }
 
         [HttpGet("top-animes")]
-        public IActionResult InitTopAnimes(string secret) 
+        public IActionResult InitTopAnimes(string secret)
         {
             if (secret == _config["JWT:Secret"])
             {
                 _service.InitializeTopAnimes();
-                return Ok();
+                _logger.LogInformation("Top Animes are initialized!");
+
+                return Ok("Top Animes are initialized!");
             }
-            return BadRequest();
+            return BadRequest("Incorrect secret!");
         }
 
         [HttpGet("animes-songs")]
-        public IActionResult InitAnimesAndSongs(string secret) 
+        public IActionResult InitAnimesAndSongs(string secret)
         {
             if (secret == _config["JWT:Secret"])
             {
                 _service.InitializeAnimesAndSongs();
-                return Ok();
+                _logger.LogInformation("Animes and Songs are initialized!");
+
+                return Ok("Top Animes are initialized!");
             }
-            return BadRequest();
+            return BadRequest("Incorrect secret!");
         }
     }
 }

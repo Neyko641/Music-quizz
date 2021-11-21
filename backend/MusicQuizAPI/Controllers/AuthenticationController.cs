@@ -1,15 +1,15 @@
 using System;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using MusicQuizAPI.Models;
 using MusicQuizAPI.Services;
-using MusicQuizAPI.Models.Parameters;
-using Microsoft.Extensions.Logging;
 using MusicQuizAPI.Helpers;
+using MusicQuizAPI.Models.Parameters;
+
 
 namespace MusicQuizAPI.Controllers
 {
@@ -44,7 +44,7 @@ namespace MusicQuizAPI.Controllers
             SecurityHelper.RegisterUser(ResponseContext, UserService, parameters.Authorization, 
                 Configuration["JWT:Secret"]);
             
-            return Ok(ResponseContext.Body);
+            return Created("", ResponseContext.Body);
         }
 
         [HttpPost("login")]
