@@ -25,6 +25,12 @@ namespace MusicQuizAPI.Database
             return Db.SaveChanges();
         }
 
+        public int Update(User user)
+        {
+            Db.Users.Update(user);
+            return Db.SaveChanges();
+        }
+
         public User GetByUsername(string username) 
             => Db.Users.FirstOrDefault(u => u.Username == username);
 

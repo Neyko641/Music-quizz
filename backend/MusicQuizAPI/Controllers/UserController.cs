@@ -72,6 +72,42 @@ namespace MusicQuizAPI.Controllers
         }
 
 
+        [HttpPut]
+        public IActionResult UpdateUser([FromBody] UpdateUserParamModel parameters)
+        {
+            User CurrentUser = (User)HttpContext.Items["User"];
+            
+            List<string> messages = new List<string>();
+
+            if (BCrypt.Net.BCrypt.Verify(parameters.Password, CurrentUser.Password))
+            {
+                if (parameters.Username != null)
+                {
+                    CurrentUser.Username = parameters.Username;
+                    messages.Add("Username updated successfully!");
+                }
+                if (parameters.Avatar != null)
+                {
+                    CurrentUser.Avatar = parameters.Avatar;
+                    messages.Add("Avatar updated successfully!");
+                }
+                if (parameters.NewPassword != null)
+                {
+                    string newPassword = BCrypt.Net.BCrypt.HashPassword(parameters.NewPassword);
+                    CurrentUser.Password = newPassword;
+                    messages.Add("New password updated successfully!");
+                }
+
+                UserService.UpdateUser(CurrentUser);
+            }
+            else throw new BadArgumentException("Password is not correct!");
+
+            ResponseContext.AddData(messages);
+
+            return Ok(ResponseContext.Body);
+        }
+
+
         [HttpGet("search")]
         public IActionResult Search([FromQuery] SearchUserParamModel parameters)
         {
@@ -158,9 +194,30 @@ namespace MusicQuizAPI.Controllers
 
 
         [HttpGet("requests")]
-        public IActionResult GetFriendRequests()
+        public IActionResult GetFriendRequests([FromQuery] GetUserParamModel parameters)
         {
-            return Ok();
+            User CurrentUser = (User)HttpContext.Items["User"];
+
+            IEnumerable<Friendship> friendships = FriendshipService.GetAllRelationships(CurrentUser)
+                .Take(parameters.Limit);
+
+            // It's too complicated here to use the Mapper
+            IEnumerable<FriendshipReadDto> result = friendships
+                .Select(f => 
+                {
+                    return new FriendshipReadDto
+                    {
+                        ID = f.ID,
+                        UserID = f.RequestedUserID,
+                        Username = UserService.GetByID(f.RequestedUserID).Username,
+                        StartDate = f.StartDate,
+                        DidCurrentUserSendRequest = f.RequestedUserID == CurrentUser.UserID
+                    };
+                });
+
+            ResponseContext.AddData(result);
+
+            return Ok(ResponseContext.Body);
         }
         #endregion
     }

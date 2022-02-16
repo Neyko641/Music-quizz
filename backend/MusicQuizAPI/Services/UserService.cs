@@ -86,5 +86,13 @@ namespace MusicQuizAPI.Services
 
             return users;
         }
+
+        public void UpdateUser(User user)
+        {
+            if (_userRepo.Update(user) == 0)
+            {
+                throw new UnexcpectedException("Cannot update the user!");
+            }
+        }
     }
 }

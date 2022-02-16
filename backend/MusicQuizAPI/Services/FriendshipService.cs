@@ -109,5 +109,11 @@ namespace MusicQuizAPI.Services
                 })
                 .ToList();
         }
+
+        public List<Friendship> GetAllRelationships(User user)
+            => _friendshipRepository
+                .GetAll(user.UserID)
+                .Where(f => !f.IsAccepted && f.AcceptedUserID == user.UserID)
+                .ToList();
     }
 }

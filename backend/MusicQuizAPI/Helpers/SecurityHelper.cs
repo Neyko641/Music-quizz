@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Text;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.RegularExpressions;
 using Microsoft.IdentityModel.Tokens;
@@ -19,14 +20,21 @@ namespace MusicQuizAPI.Helpers
             try 
             {
                 // email = credentials[0]   password = credentials[1]
-                var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(authorizationHeader)).Split(':');
+                var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(authorizationHeader)).Split(':');
 
                 if (!IsValidEmail(credentials[0]))
                 {
                     throw new BadHeaderException("Email is not valid!");
                 }
+                else if (string.IsNullOrEmpty(credentials[1]))
+                {
+                    throw new BadHeaderException("Password is not valid!");
+                }
 
-                if (userService.RegisterUser(credentials[0].ToLower(), credentials[1], username))
+                if (userService.RegisterUser(
+                    credentials[0].ToLower(),                       // Email
+                    BCrypt.Net.BCrypt.HashPassword(credentials[1]), // Hashed Password
+                    username))
                 {
                     int userID = userService.GetIDByEmail(credentials[0]);
 
@@ -48,7 +56,7 @@ namespace MusicQuizAPI.Helpers
                     throw new UnexcpectedException("Something went wrong before the registration.");
                 }
             }
-            catch (FormatException)
+            catch (FormatException)
             {
                 throw new UnexcpectedException("Bad payload!");
             }
@@ -58,13 +66,18 @@ namespace MusicQuizAPI.Helpers
         {
             try 
             {
-                var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(authorizationHeader)).Split(':');
+                var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(authorizationHeader)).Split(':');
+
+                if (string.IsNullOrEmpty(credentials[1]))
+                {
+                    throw new BadHeaderException("Password is not valid!");
+                }
 
                 var user = userService.GetByEmail(credentials[0]);
 
                 if (user != null)
                 {
-                    if (user.Password == credentials[1])
+                    if (BCrypt.Net.BCrypt.Verify(credentials[1], user.Password))
                     {
                         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
 
@@ -74,7 +87,7 @@ namespace MusicQuizAPI.Helpers
                     }
                     else
                     {
-                        throw new BadHeaderException("Wrong password!");
+                        throw new BadHeaderException("Wrong password or email!");
                     }
                 }
                 else
@@ -82,7 +95,7 @@ namespace MusicQuizAPI.Helpers
                     throw new NotExistException("This user doesn't exist.");
                 }
             }
-            catch (FormatException)
+            catch (FormatException)
             {
                 throw new UnexcpectedException("Bad payload!");
             }
@@ -99,7 +112,7 @@ namespace MusicQuizAPI.Helpers
                 SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature)
             });
 
-            return handler.WriteToken(token);
+            return handler.WriteToken(token);
         }
 
         private static bool IsValidEmail(string email)

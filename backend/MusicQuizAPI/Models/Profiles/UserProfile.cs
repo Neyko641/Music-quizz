@@ -17,6 +17,8 @@ namespace MusicQuizAPI.Models.Profiles
                     opts => opts.MapFrom(src => src.RegisteredDate.ToString("d MMM yyyy")));
 
             CreateMap<User, UserSimplifiedReadDto>();
+
+            CreateMap<Friendship, FriendshipReadDto>();
         }
     }
 }

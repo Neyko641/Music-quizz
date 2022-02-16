@@ -37,7 +37,7 @@ namespace MusicQuizAPI.Controllers
         POST Requests are required to have 'Authorization' header with value
         of "[email]:[password]" in base64 string.
         */
-            
+    
 
 
         // If body isn't provided for username it gives status code 415 unsupported media type
@@ -47,7 +47,7 @@ namespace MusicQuizAPI.Controllers
         [HttpPost("register")]
         public IActionResult Register([FromHeader] AuthorizationParamModel authParams,
             [FromBody] RegisterUserParamModel regParams)
-        {
+        {
             string token = SecurityHelper.RegisterUser(
                 userService: UserService, 
                 authorizationHeader: authParams.Authorization, 
@@ -61,7 +61,7 @@ namespace MusicQuizAPI.Controllers
             }, HttpStatusCode.Created);
             
             return Created("", ResponseContext.Body);
-        }
+        }
 
         [HttpPost("login")]
         public IActionResult Login([FromHeader] AuthorizationParamModel parameters)
