@@ -48,17 +48,17 @@ namespace MusicQuizAPI.Helpers
                     }
                     else
                     {
-                        throw new UnexcpectedException("Something went wrong after the registration.");
+                        throw new UnexpectedException("Something went wrong after the registration.");
                     }
                 }
                 else
                 {
-                    throw new UnexcpectedException("Something went wrong before the registration.");
+                    throw new UnexpectedException("Something went wrong before the registration.");
                 }
             }
             catch (FormatException)
             {
-                throw new UnexcpectedException("Bad payload!");
+                throw new UnexpectedException("Bad payload!");
             }
         }
 
@@ -97,7 +97,7 @@ namespace MusicQuizAPI.Helpers
             }
             catch (FormatException)
             {
-                throw new UnexcpectedException("Bad payload!");
+                throw new UnexpectedException("Bad payload!");
             }
         }
 

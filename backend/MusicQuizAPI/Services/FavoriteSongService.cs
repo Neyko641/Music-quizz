@@ -31,7 +31,7 @@ namespace MusicQuizAPI.Services
         {
             if (!_songRepo.Exist(favoriteSong.SongID)) 
             {
-                throw new BadArgumentException($"The song [{favoriteSong.SongID}] doesn't exist!");
+                throw new NotExistException($"The song [{favoriteSong.SongID}] doesn't exist!");
             }
 
             if (Exist(favoriteSong)) 
@@ -42,7 +42,7 @@ namespace MusicQuizAPI.Services
 
             if (_favSongRepo.Add(favoriteSong) == 0)
             {
-                throw new UnexcpectedException($"Cannot add the song [{favoriteSong.SongID}] " +
+                throw new UnexpectedException($"Cannot add the song [{favoriteSong.SongID}] " +
                     $"to favorites for user [{favoriteSong.UserID}]");
             } 
 
@@ -63,7 +63,7 @@ namespace MusicQuizAPI.Services
                 
             if (_favSongRepo.Remove(favoriteSongToRemove) == 0)
             {
-                throw new UnexcpectedException($"Cannot remove the song [{favoriteSong.SongID}] " +
+                throw new UnexpectedException($"Cannot remove the song [{favoriteSong.SongID}] " +
                     $"from favorites for user [{favoriteSong.UserID}]");
             }   
 
@@ -87,7 +87,7 @@ namespace MusicQuizAPI.Services
 
             if (_favSongRepo.Update(favoriteSongToUpdate) == 0)
             {
-                throw new UnexcpectedException($"Cannot update the song [{favoriteSong.SongID}] " +
+                throw new UnexpectedException($"Cannot update the song [{favoriteSong.SongID}] " +
                     $"from favorites for user [{favoriteSong.UserID}]");
             }
 

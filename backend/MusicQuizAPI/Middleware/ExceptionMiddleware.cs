@@ -26,7 +26,7 @@ namespace MusicQuizAPI.Middleware
             {
                 await _next(httpContext);
             }
-            catch (UnexcpectedException ex)
+            catch (UnexpectedException ex)
             {
                 await HandleExceptionAsync(httpContext, ex);
             }

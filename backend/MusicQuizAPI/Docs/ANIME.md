@@ -17,9 +17,12 @@ Anime Controller manages the basic functionality with the animes like:
 GET /api/anime/search
 ```
 
-#### Parameters
+#### **Parameters**
 
-[REQUIRED] `title` - String with the title of the anime to search for.
+[*REQUIRED*] `title` - String with the title of the anime to search for.
+
+#### **Body**
+Empty
 
 ### Response
 [ `200` ] - List of objects for each anime corresponding to the title.
@@ -28,19 +31,18 @@ GET /api/anime/search
     {
         "animeID": 0,
         "title": "",
-        "score": 0,
-        "user_score": 0,
-        "popular": 0
+        "score": 0.0,
+        "userScore": 0,
+        "popularity": 0
     }
 ]
 ```
-#### Possible errors status:
+#### ***Possible errors status:***
 
-[ `400` ] - If title param is not given.
-
+[ `400` ] - If title param is not given.<br/>
 [ `401` ] - If token is not provided in the header.
 
-#### Possible errors codes:
+#### ***Possible errors codes:***
 None
 
 <br />
@@ -52,28 +54,35 @@ None
 ### Request
 
 ```
-POST /api/anime/add-favorite
+POST /api/anime/favorites
 ```
 
-#### Parameters
+#### **Parameters**
+None
 
-[REQUIRED] `id` - Positive Number with the id of the anime.
-
-[REQUIRED] `score` - Number with the score given to the anime from 1 to 10.
+#### **Body**
+[*REQUIRED*] `id` - Positive Number with the id of the anime.<br/>
+[*REQUIRED*] `score` - Number with the score given to the anime from 1 to 10.
+```json
+{
+    "id": 0,
+    "score": 0
+}
+```
 
 ### Response
 [ `201` ] - Message which gives information about the anime and user id.
 ```json
 "The anime [0] was added successfully to the user [0]!"
 ```
-#### Possible errors status:
+#### ***Possible errors status:***
 
-[ `400` ] - If id and/or score params are not given or are not validated correctly.
-
+[ `400` ] - If id and/or score params are not given or are not validated correctly.<br/>
 [ `401` ] - If token is not provided in the header.
 
-#### Possible errors codes:
-[ `5` ] - If the anime is already added to favorites for the user.
+#### ***Possible errors codes:***
+[ `30` ] - If the anime is already added to favorites for the user.<br/>
+[ `31` ] - If there is no anime with that ID.
 
 <br />
 
@@ -84,26 +93,32 @@ POST /api/anime/add-favorite
 ### Request
 
 ```
-DELETE /api/anime/remove-favorite
+DELETE /api/anime/favorites
 ```
 
-#### Parameters
+#### **Parameters**
+None
 
-[REQUIRED] `id` - Positive Number with the id of the anime.
+#### **Body**
+[*REQUIRED*] `id` - Positive Number with the id of the anime.
+```json
+{
+    "id": 0
+}
+```
 
 ### Response
 [ `200` ] - Message which gives information about the anime and user id.
 ```json
 "The anime [0] was removed successfully from the user [0]!"
 ```
-#### Possible errors status:
+#### ***Possible errors status:***
 
-[ `400` ] - If id param is not given or not validated correctly.
-
+[ `400` ] - If id param is not given or not validated correctly.<br/>
 [ `401` ] - If token is not provided in the header.
 
-#### Possible errors codes:
-[ `5` ] - If the anime is already not in favorites for the user.
+#### ***Possible errors codes:***
+[ `31` ] - If the anime is already not in favorites for the user or doesn't exist.
 
 <br />
 
@@ -114,28 +129,34 @@ DELETE /api/anime/remove-favorite
 ### Request
 
 ```
-PATCH /api/anime/update-favorite
+PATCH /api/anime/favorites
 ```
 
-#### Parameters
+#### **Parameters**
+None
 
-[REQUIRED] `id` - Positive Number with the id of the anime.
-
-[REQUIRED] `score` - Number with the new score given to the anime from 1 to 10.
+#### **Body**
+[*REQUIRED*] `id` - Positive Number with the id of the anime.<br/>
+[*REQUIRED*] `score` - Number with the new score given to the anime from 1 to 10.
+```json
+{
+    "id": 0,
+    "score": 0
+}
+```
 
 ### Response
 [ `200` ] - Message which gives information about the anime and user id.
 ```json
 "The anime [0] updated successfully for the user [0]!"
 ```
-#### Possible errors status:
+#### ***Possible errors status:***
 
-[ `400` ] - If id and/or score params are not given or are not validated correctly.
-
+[ `400` ] - If id and/or score params are not given or are not validated correctly.<br/>
 [ `401` ] - If token is not provided in the header.
 
-#### Possible errors codes:
-[ `5` ] - If the anime is already not in favorites for the user.
+#### ***Possible errors codes:***
+[ `31` ] - If the anime is already not in favorites for the user.
 
 <br />
 
@@ -146,12 +167,14 @@ PATCH /api/anime/update-favorite
 ### Request
 
 ```
-GET /api/anime/get-favorites
+GET /api/anime/favorites
 ```
 
-#### Parameters
-
+#### **Parameters**
 None
+
+#### **Body**
+Empty
 
 ### Response
 [ `200` ] - List of objects for each anime.
@@ -166,11 +189,11 @@ None
     }
 ]
 ```
-#### Possible errors status:
+#### ***Possible errors status:***
 
 [ `401` ] - If token is not provided in the header.
 
-#### Possible errors codes:
+#### ***Possible errors codes:***
 
 None
 

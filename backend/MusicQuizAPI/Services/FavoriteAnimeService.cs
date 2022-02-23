@@ -32,7 +32,7 @@ namespace MusicQuizAPI.Services
         {
             if (!_animeRepo.Exist(favoriteAnime.AnimeID)) 
             {
-                throw new BadArgumentException($"The anime [{favoriteAnime.AnimeID}] doesn't exist!");
+                throw new NotExistException($"The anime [{favoriteAnime.AnimeID}] doesn't exist!");
             }  
 
             if (Exist(favoriteAnime)) 
@@ -43,7 +43,7 @@ namespace MusicQuizAPI.Services
             
             if (_favAnimeRepo.Add(favoriteAnime) == 0)
             {
-                throw new UnexcpectedException($"Cannot add the anime [{favoriteAnime.AnimeID}] " +
+                throw new UnexpectedException($"Cannot add the anime [{favoriteAnime.AnimeID}] " +
                     $"to favorites for user [{favoriteAnime.UserID}]");
             } 
             
@@ -64,7 +64,7 @@ namespace MusicQuizAPI.Services
                 
             if (_favAnimeRepo.Remove(favoriteAnimeToRemove) == 0)
             {
-                throw new UnexcpectedException($"Cannot remove the anime [{favoriteAnime.AnimeID}] " +
+                throw new UnexpectedException($"Cannot remove the anime [{favoriteAnime.AnimeID}] " +
                     $"from favorites for user [{favoriteAnime.UserID}]");
             }   
 
@@ -88,7 +88,7 @@ namespace MusicQuizAPI.Services
 
             if (_favAnimeRepo.Update(favoriteAnimeToUpdate) == 0)
             {
-                throw new UnexcpectedException($"Cannot update the anime [{favoriteAnime.AnimeID}] " +
+                throw new UnexpectedException($"Cannot update the anime [{favoriteAnime.AnimeID}] " +
                     $"from favorites for user [{favoriteAnime.UserID}]");
             }
 

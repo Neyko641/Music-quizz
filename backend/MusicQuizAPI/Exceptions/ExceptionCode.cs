@@ -6,14 +6,14 @@ namespace MusicQuizAPI.Exceptions
         Unexcpected,
 
         // Arguments
-        BadArgument,
+        BadArgument = 10,
 
         // Headers
         MissingHeader = 20,
         BadHeader,
 
         // Data
-        AlreadyExist = 10,
+        AlreadyExist = 30,
         NotExist,
 
         // Already defined

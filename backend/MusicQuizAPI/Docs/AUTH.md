@@ -13,9 +13,16 @@ Authentication Controller manages the authentication and authorization of the us
 POST /api/auth/register
 ```
 
-~~Parameters~~ Headers
+#### **Headers**
+[*REQUIRED*] `Authorization` - String encoded with base 64 containing email and password in format `email:password`.
 
-[REQUIRED] `Authorization` - String encoded with base 64 containing username and password in format `username:password`.
+#### **Body**
+[*REQUIRED*] `username` - The username of the user.
+```json
+{
+    "username": ""
+}
+```
 
 ### Response
 [ `201` ] - A JWT token that you need to provide in the same `Authorization` header for any other controller for authorization in format: `Bearer token`.
@@ -24,13 +31,14 @@ POST /api/auth/register
     "token": ""
 }
 ```
-#### Possible errors status:
+#### ***Possible errors status:***
 - [ `400` ] - If registration is unsuccessful.
 
-#### Possible errors codes:
-- [ `0` ] - If the authentication header isn't correct.
-- [ `6` ] - If the authentication header is missing.
-- [ `9` ] - If the username is already taken.
+#### ***Possible errors codes:***
+- [ `10` ] - if the username in the body is not provided, unvalid or empty.
+- [ `20` ] - If the authentication header is missing.
+- [ `21` ] - If the authentication header is in bad format.
+- [ `30` ] - If the email is already taken.
 
 <br />
 
@@ -44,9 +52,11 @@ POST /api/auth/register
 POST /api/auth/login
 ```
 
-~~Parameters~~ Headers
+#### **Headers**
+[*REQUIRED*] `Authorization` - String encoded with base 64 containing email and password in format `email:password`.
 
-[REQUIRED] `Authorization` - String encoded with base 64 containing username and password in format `username:password`.
+#### **Body**
+Empty
 
 ### Response
 [ `201` ] - A JWT token that you need to provide in the same `Authorization` header for any other controller for authorization in format: `Bearer token`.
@@ -55,12 +65,13 @@ POST /api/auth/login
     "token": ""
 }
 ```
-#### Possible errors status:
+#### ***Possible errors status:***
 - [ `400` ] - If loggin is unsuccessful.
 
-#### Possible errors codes:
-- [ `0` ] - If the authentication header isn't correct.
-- [ `6` ] - If the authentication header is missing.
+#### ***Possible errors codes:***
+- [ `20` ] - If the authentication header is missing.
+- [ `21` ] - If the authentication header isn't correct.
+- [ `31` ] - If the user with the given email doesn't exist.
 
 <br />
 

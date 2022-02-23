@@ -4,9 +4,9 @@
 namespace MusicQuizAPI.Exceptions
 {
     #region Basic
-    public class UnexcpectedException : BaseException
+    public class UnexpectedException : BaseException
     {
-        public UnexcpectedException(string msg) : base((int)ExceptionCode.Unexcpected, msg) { }
+        public UnexpectedException(string msg) : base((int)ExceptionCode.Unexcpected, msg) { }
     }
 
     public class UnauthorizedException : BaseException

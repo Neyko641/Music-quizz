@@ -2,7 +2,7 @@
 
 ## Requirements:
 - .NET Core 5.0 or higher;
-- SQL Database; (MySQL and MySQL Workbench is reccomended).
+- MySQL Database;
 
 
 ## How to run:
@@ -49,7 +49,7 @@ Most of these status code are 200 if everything is okay, 201 if the resource is 
 <br />
   
 ### Bad response [`400` - `499`] status.
-You will really want to avoid these. Bad arguments, missing headers, unexisting resources and so on. Thank god we have custom messages with our custom error codes. <br />
+You will really want to avoid these. Bad arguments, missing headers, unexisting resources and so on. Thank god we provide custom messages with our custom error codes. <br />
 Be aware that even with custom codes, argument validation will not give you exact information about what is wrong!
 
 ```json

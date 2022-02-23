@@ -124,7 +124,7 @@ namespace MusicQuizAPI.Controllers
                     ResponseContext.AddData(Mapper.Map<IEnumerable<UserSecuredReadDto>>(users));
                     break;
                 default:
-                    throw new UnexcpectedException("How did you even get here ?!?");
+                    throw new UnexpectedException("How did you even get here ?!?");
             }
 
             return Ok(ResponseContext.Body);

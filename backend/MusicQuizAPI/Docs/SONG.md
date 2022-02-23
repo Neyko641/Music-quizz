@@ -5,7 +5,7 @@ Song Controller manages the basic functionality with the songs like:
 - [Add Favorite Song](#add-favorite-song)
 - [Remove Favorite Song](#remove-favorite-song)
 - [Update Favorite Song](#update-favorite-song)
-- [Get Favorite Song](#get-favorite-song)
+- [Get All Favorite Songs](#get-all-favorite-songs)
 - [Get Random Song](#get-random-song)
 
 ---
@@ -13,18 +13,18 @@ Song Controller manages the basic functionality with the songs like:
 ## Search for Song 
 
 ### Request
-
 ```
 GET /api/song/search
 ```
 
-#### Parameters
-
-[REQUIRED] `title` - String with the title of the song to search for
-
-[OPTIONAL] `searchtype` - String for the type of search:
+#### **Parameters**
+[*REQUIRED*] `title` - String with the title of the song to search for.<br/>
+[*OPTIONAL*] `searchtype` - String for the type of search:
 - `song-title` - Search by song title *(DEFAULT)
 - `anime-title` - Search by anime title
+
+#### **Body**
+Empty
 
 ### Response
 [ `200` ] - List of objects for each song corresponding to the title by the type
@@ -34,25 +34,23 @@ GET /api/song/search
         "songID": 0,
         "animeID": 0,
         "title": "",
+        "animeTitle": "",
         "artist": "",
-        "anime_title": "",
+        "url": "url.webm",
         "songType": "OP or ED",
         "detailedSongType": "Opening1",
-        "url": "url.webm",
         "difficulty": "",
-        "score": 0,
-        "user_score": 0,
+        "score": 0.0,
+        "userScore": 0,
         "popularity": 0
     }
 ]
 ```
-#### Possible errors status:
-
-[ `400` ] - If title param is not given
-
+#### ***Possible errors status:***
+[ `400` ] - If title param is not given<br/>
 [ `401` ] - If token is not provided in the header
 
-#### Possible errors codes:
+#### ***Possible errors codes:***
 None
 
 <br />
@@ -64,28 +62,34 @@ None
 ### Request
 
 ```
-POST /api/song/add-favorite
+POST /api/song/favorites
 ```
 
-#### Parameters
+#### **Parameters**
+None
 
-[REQUIRED] `id` - Positive Number with the id of the song
-
-[REQUIRED] `score` - Number with the score given to the song from 1 to 10
+#### **Body**
+[*REQUIRED*] `id` - Positive Number with the id of the song<br/>
+[*REQUIRED*] `score` - Number with the score given to the song from 1 to 10
+```json
+{
+    "id": 0,
+    "score": 0
+}
+```
 
 ### Response
 [ `201` ] - Message which gives information about the song and user id
 ```json
 "The song [0] was added successfully to the user [0]!"
 ```
-#### Possible errors status:
-
-[ `400` ] - If id and/or score params are not given or are not validated correctly
-
+#### ***Possible errors status:***
+[ `400` ] - If id and/or score params are not given or are not validated correctly<br/>
 [ `401` ] - If token is not provided in the header
 
-#### Possible errors codes:
-[ `5` ] - If the song is already added to favorites for the user
+#### ***Possible errors codes:***
+[ `30` ] - If the song is already added to favorites for the user<br/>
+[ `31` ] - If the song with the given id doesn't exist
 
 <br />
 
@@ -96,26 +100,31 @@ POST /api/song/add-favorite
 ### Request
 
 ```
-DELETE /api/song/remove-favorite
+DELETE /api/song/favorites
 ```
 
-#### Parameters
+#### **Parameters**
+None
 
-[REQUIRED] `id` - Positive Number with the id of the song.
+#### **Body**
+[*REQUIRED*] `id` - Positive Number with the id of the song.
+```json
+{
+    "id": 0
+}
+```
 
 ### Response
 [ `200` ] - Message which gives information about the song and user id.
 ```json
 "The song [0] was removed successfully from the user [0]!"
 ```
-#### Possible errors status:
-
-[ `400` ] - If id param is not given or not validated correctly
-
+#### ***Possible errors status:***
+[ `400` ] - If id param is not given or not validated correctly<br/>
 [ `401` ] - If token is not provided in the header
 
-#### Possible errors codes:
-[ `5` ] - If the song is already not in favorites for the user
+#### ***Possible errors codes:***
+[ `31` ] - If the song is already not in favorites for the user
 
 <br />
 
@@ -126,43 +135,47 @@ DELETE /api/song/remove-favorite
 ### Request
 
 ```
-PATCH /api/song/update-favorite
+PATCH /api/song/favorites
 ```
 
-#### Parameters
+#### **Parameters**
+None
 
-[REQUIRED] `id` - Positive Number with the id of the song.
-
-[REQUIRED] `score` - Number with the new score given to the song from 1 to 10.
+#### **Body**
+[*REQUIRED*] `id` - Positive Number with the id of the song.<br/>
+[*REQUIRED*] `score` - Number with the new score given to the song from 1 to 10.
+```json
+{
+    "id": 0,
+    "score": 0
+}
+```
 
 ### Response
 [ `200` ] - Message which gives information about the song and user id.
 ```json
 "The song [0] updated successfully for the user [0]!"
 ```
-#### Possible errors status:
-
-[ `400` ] - If id and/or score params are not given or are not validated correctly
-
+#### ***Possible errors status:***
+[ `400` ] - If id and/or score params are not given or are not validated correctly<br/>
 [ `401` ] - If token is not provided in the header
 
-#### Possible errors codes:
-[ `5` ] - If the song is already not in favorites for the user
+#### ***Possible errors codes:***
+[ `31` ] - If the song is already not in favorites for the user
 
 <br />
 
 ---
 
-## Get Favorite Song 
+## Get All Favorite Songs
 
 ### Request
 
 ```
-GET /api/song/get-favorites
+GET /api/song/favorites
 ```
 
-#### Parameters
-
+#### **Parameters**
 None
 
 ### Response
@@ -173,24 +186,23 @@ None
         "songID": 0,
         "animeID": 0,
         "title": "",
+        "animeTitle": "",
         "artist": "",
-        "anime_title": "",
+        "url": "url.webm",
         "songType": "OP or ED",
         "detailedSongType": "Opening1",
-        "url": "url.webm",
         "difficulty": "",
-        "score": 0,
-        "user_score": 0,
+        "score": 0.0,
+        "userScore": 0,
         "popularity": 0
-    }
+    },
+    {}
 ]
 ```
-#### Possible errors status:
-
+#### ***Possible errors status:***
 [ `401` ] - If token is not provided in the header
 
-#### Possible errors codes:
-
+#### ***Possible errors codes:***
 None
 
 ---
@@ -203,11 +215,9 @@ None
 GET /api/song/random
 ```
 
-#### Parameters
-
-[OPTIONAL] `count` - Number from 1 to 100 with the number of the songs *(DEFAULT=10)
-
-[OPTIONAL] `difficulty` - String with the difficulty of the song:
+#### **Parameters**
+[*OPTIONAL*] `count` - Number from 1 to 100 with the number of the songs *(DEFAULT=10)<br/>
+[*OPTIONAL*] `difficulty` - String with the difficulty of the song:
 - `easy` - Easy difficulty songs *(DEFAULT)
 - `medium` - Medium difficulty songs
 - `hard` - Hard difficulty songs
@@ -220,25 +230,24 @@ GET /api/song/random
         "songID": 0,
         "animeID": 0,
         "title": "",
+        "animeTitle": "",
         "artist": "",
-        "anime_title": "",
+        "url": "url.webm",
         "songType": "OP or ED",
         "detailedSongType": "Opening1",
-        "url": "url.webm",
         "difficulty": "",
-        "score": 0,
-        "user_score": 0,
+        "score": 0.0,
+        "userScore": 0,
         "popularity": 0
-    }
+    },
+    {}
 ]
 ```
-#### Possible errors status:
-
-[ `400` ] - If count and/or difficulty params are not given or are not validated correctly
-
+#### ***Possible errors status:***
+[ `400` ] - If count and/or difficulty params are not given or are not validated correctly<br/>
 [ `401` ] - If token is not provided in the header
 
-#### Possible errors codes:
+#### ***Possible errors codes:***
 None
 
 <br />
